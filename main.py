@@ -1,11 +1,13 @@
-from PySide6.QtWidgets import QApplication, QMainWindow
+from PySide6.QtWidgets import QApplication
+from ide import IDE
 
-class MyWidow(QMainWindow):
+class MainWindow(IDE):
     def __init__(self):
         super().__init__()
+        self.setupUI()
 
 if __name__ == '__main__':
     app = QApplication([])
-    window = MyWidow()
-    window.show()
+    w = MainWindow()
+    w.show()
     app.exec()
