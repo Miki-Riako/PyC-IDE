@@ -59,7 +59,7 @@ class Parser:
             return
         
         if not self.is_delimiter():
-            raise SyntaxError('Expecting: identifiers, But get ' + self.cur[0])
+            raise SyntaxError('Expecting: delimiter, But get ' + self.cur[0])
         if self.cur_val in ['(', '{']:
             self.bracket_stack.append(self.cur_val)
         elif self.cur_val in [')', '}']:
@@ -103,7 +103,7 @@ class Parser:
 
     def declaration(self):
         var_type = self.type()
-        identifier = self.cur[1]
+        identifier = self.cur_val()
         self.match_word('identifiers')
         self.match_delimiter()
         self.compiler.symbol_table.add(identifier, {'type':var_type, 'scope':'local'})
@@ -153,7 +153,6 @@ class Parser:
         if self.cur[0] == 'identifiers':
             identifier = self.cur_val()
             if not self.compiler.symbol_table.lookup(identifier):
-                # print(self.compiler.symbol_table.table)
                 raise SyntaxError('Unknown identifier: ' + identifier)
             self.match_word('identifiers')
 
@@ -164,7 +163,7 @@ class Parser:
                 self.compiler.quadruples.append(quad)
                 return quad
             else:
-                self.match('punctuation')
+                self.match_word('punctuation')
                 if self.cur[0] not in ['identifiers', 'constants_int', 'constants_float', 'constants_char', 'constants_string']:
                     raise SyntaxError('Missing the expression!')
                 right_hand_side = self.add_expr()
@@ -202,23 +201,25 @@ class Parser:
         return left
 
     def add_expr(self):
-        left = self.multiplicative_expression()
+        left = self.mul_expression()
         while self.cur[0] == 'punctuation' and self.cur_val() in ['+', '-', '++', '--']:
             operator = self.cur_val()
             self.match_word('punctuation')
+            
             if operator in ['++', '--']:
                 right = '1'
             else:
                 if self.cur[0] not in ['identifiers', 'constant_int', 'constant_float']:
                     raise SyntaxError('Missing the number after add or sub!')
-                right = self.multiplicative_expression()
+                right = self.mul_expression()
+            
             temp_var = self.new_temp()
             quad = (self.new_label(), operator, left, right, temp_var)
             self.compiler.quadruples.append(quad)
             left = temp_var
         return left
 
-    def multiplicative_expression(self):
+    def mul_expression(self):
         left = self.factor()
         while self.cur[0] == 'punctuation' and self.cur_val() in ['*', '/']:
             operator = self.cur[1]

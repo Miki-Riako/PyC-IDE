@@ -37,7 +37,7 @@ if __name__ == '__main__':
     compiler = Compiler()
     compiler.code = input()
     if compiler.code == '':
-        compiler.code = 'int main() {int num; int a; num = 2; if (num > 0) {a = num; } else {a = 1; } }'
+        compiler.code = 'int main(){int num;int a;num=2;if(num>0){a=num;}else{a=1;}}'
 
     compiler.compile()
     print(compiler.quadruples)
