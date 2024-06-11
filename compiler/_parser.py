@@ -20,9 +20,9 @@ class Parser:
     def function_def(self):
         self.type()
         self.match_word('identifiers')
-        self.match_delimiter()
+        self.match_char('(')
         self.parameter_list()
-        self.match_delimiter()
+        self.match_char(')')
         self.compound_statement()
 
     def next(self):
@@ -52,6 +52,26 @@ class Parser:
         
         self.next()
     
+    def match_char(self, char):
+        if self.cur[0] == 'END':
+            if self.bracket_stack:
+                raise SyntaxError('Bracket no matched!')
+            return
+        
+        if self.cur_val() != char:
+            raise SyntaxError('Expecting: ' + char + ', But get ' + self.cur[0])
+        
+        if self.cur_val() in ['(', '{']:
+            self.bracket_stack.append(self.cur_val())
+        elif self.cur_val() in [')', '}']:
+            if not self.bracket_stack or \
+            (self.cur_val() == ')' and self.bracket_stack[-1] != '(') or \
+            (self.cur_val() == '}' and self.bracket_stack[-1] != '{'):
+                raise SyntaxError('Bracket no matched!')
+            self.bracket_stack.pop()
+        
+        self.next()
+
     def match_constants(self):
         if self.cur[0] == 'END':
             if self.bracket_stack:
@@ -102,10 +122,10 @@ class Parser:
             raise SyntaxError('Expecting Keywords!')
 
     def compound_statement(self):
-        self.match_delimiter()
+        self.match_char('{')
         self.declaration_list()
         self.statement_list()
-        self.match_delimiter()
+        self.match_char('}')
 
     def declaration_list(self):
         while self.cur[0] == 'keywords':
@@ -244,17 +264,17 @@ class Parser:
         return left
 
     def while_statement(self):
-        self.match_word('keywords')
-        self.match_delimiter()
+        self.match_char('while')
+        self.match_char('(')
         condition = self.logical_expr()
-        self.match_delimiter()
+        self.match_char(')')
         begin_label = self.get_label()
         start_label = self.new_label()
         self.compiler.quadruples.append((start_label, 'jf', condition, None, None))
         jump_location = len(self.compiler.quadruples) - 1
-        self.match_delimiter()
+        self.match_char('{')
         self.statement_list()
-        self.match_delimiter()
+        self.match_char('}')
         self.compiler.quadruples.append((self.new_label(), 'jump', None, None, begin_label))
         end_label = self.new_label()
         self.compiler.quadruples.append((end_label, None, None, None, end_label))
@@ -262,15 +282,15 @@ class Parser:
 
     def if_statement(self):
         self.match_word('keywords')
-        self.match_delimiter()
+        self.match_char('(')
         condition = self.logical_expr()
-        self.match_delimiter()
+        self.match_char(')')
         start_label = self.new_label()
         self.compiler.quadruples.append((start_label, 'jf', condition, None, None))
         jump_location = len(self.compiler.quadruples) - 1
-        self.match_delimiter()
+        self.match_char('{')
         self.statement_list()
-        self.match_delimiter()
+        self.match_char('}')
         end_label = self.new_label()
         self.compiler.quadruples.append((end_label, 'jmp', None, None, end_label))
         jump_location2 = len(self.compiler.quadruples) - 1
@@ -284,9 +304,9 @@ class Parser:
             if self.cur and self.cur_val() == 'if':
                 self.if_statement()
             else:
-                self.match_delimiter()
+                self.match_char('{')
                 self.statement_list()
-                self.match_delimiter()
+                self.match_char('}')
         
         self.compiler.quadruples[jump_location2] = (end_label, 'jmp', None, None, self.new_label())
         self.compiler.quadruples.append((self.get_label(), None, None, None, None))
