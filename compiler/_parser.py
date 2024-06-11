@@ -40,16 +40,26 @@ class Parser:
         
         if self.cur[0] != type:
             raise SyntaxError('Expecting: ' + type + ', But get ' + self.cur[0])
+        
+        if self.cur_val() in ['(', '{']:
+            self.bracket_stack.append(self.cur_val())
+        elif self.cur_val() in [')', '}']:
+            if not self.bracket_stack or \
+            (self.cur_val() == ')' and self.bracket_stack[-1] != '(') or \
+            (self.cur_val() == '}' and self.bracket_stack[-1] != '{'):
+                raise SyntaxError('Bracket no matched!')
+            self.bracket_stack.pop()
+        
         self.next()
     
-    def match_constant(self):
+    def match_constants(self):
         if self.cur[0] == 'END':
             if self.bracket_stack:
                 raise SyntaxError('Bracket no matched!')
             return
         
-        if self.cur[0] not in ['constant_int', 'constant_float', 'constant_char', 'constant_string']:
-            raise SyntaxError('Expecting: constant, But get ' + self.cur[0])
+        if self.cur[0] not in ['constants_int', 'constants_float', 'constants_char', 'constants_string']:
+            raise SyntaxError('Expecting: constants, But get ' + self.cur[0])
         self.next()
 
     def match_delimiter(self):
@@ -109,7 +119,7 @@ class Parser:
         self.compiler.symbol_table.add(identifier, {'type':var_type, 'scope':'local'})
 
     def statement_list(self):
-        while self.cur and self.cur[0] in ['identifiers', 'key_words', 'punctuation']:
+        while self.cur and (self.cur[0] in ['identifiers', 'keywords'] or self.is_delimiter()):
             if self.cur_val() == '}':
                 return
             self.statement()
@@ -117,7 +127,7 @@ class Parser:
     def statement(self):
         if self.cur[0] == 'identifiers':
             self.expr_statement()
-        elif self.cur[1] in ['if', 'while']:
+        elif self.cur_val() in ['if', 'while']:
             self.control_statement()
         elif self.cur_val() == '{':
             self.compound_statement()
@@ -126,7 +136,6 @@ class Parser:
 
     def expr_statement(self):
         self.expr()
-        print(self.cur[0])
         if not self.is_delimiter() or self.cur_val() != ';':
             raise SyntaxError('Missing ";"!')
         self.match_delimiter()
@@ -157,7 +166,7 @@ class Parser:
             self.match_word('identifiers')
 
             if self.cur_val() in ['++', '--']:
-                operator = self.cur[1]
+                operator = self.cur_val()
                 self.match_word('punctuation')
                 quad = (self.new_label(), operator, identifier, None, identifier)
                 self.compiler.quadruples.append(quad)
@@ -209,7 +218,7 @@ class Parser:
             if operator in ['++', '--']:
                 right = '1'
             else:
-                if self.cur[0] not in ['identifiers', 'constant_int', 'constant_float']:
+                if self.cur[0] not in ['identifiers', 'constants_int', 'constants_float']:
                     raise SyntaxError('Missing the number after add or sub!')
                 right = self.mul_expression()
             
@@ -217,18 +226,21 @@ class Parser:
             quad = (self.new_label(), operator, left, right, temp_var)
             self.compiler.quadruples.append(quad)
             left = temp_var
+        
         return left
 
     def mul_expression(self):
         left = self.factor()
+        
         while self.cur[0] == 'punctuation' and self.cur_val() in ['*', '/']:
-            operator = self.cur[1]
+            operator = self.cur_val()
             self.match_word('punctuation')
             right = self.factor()
             temp_var = self.new_temp()
             quad = (self.new_label(), operator, left, right, temp_var)
             self.compiler.quadruples.append(quad)
             left = temp_var
+        
         return left
 
     def while_statement(self):
@@ -238,7 +250,7 @@ class Parser:
         self.match_delimiter()
         begin_label = self.get_label()
         start_label = self.new_label()
-        self.compiler.quadruples.append((start_label, 'jfalse', condition, None, None))
+        self.compiler.quadruples.append((start_label, 'jf', condition, None, None))
         jump_location = len(self.compiler.quadruples) - 1
         self.match_delimiter()
         self.statement_list()
@@ -246,7 +258,7 @@ class Parser:
         self.compiler.quadruples.append((self.new_label(), 'jump', None, None, begin_label))
         end_label = self.new_label()
         self.compiler.quadruples.append((end_label, None, None, None, end_label))
-        self.compiler.quadruples[jump_location] = (start_label, 'jfalse', condition, None, end_label)
+        self.compiler.quadruples[jump_location] = (start_label, 'jf', condition, None, end_label)
 
     def if_statement(self):
         self.match_word('keywords')
@@ -254,27 +266,29 @@ class Parser:
         condition = self.logical_expr()
         self.match_delimiter()
         start_label = self.new_label()
-        self.compiler.quadruples.append((start_label, 'jfalse', condition, None, None))
-        jump_location = len(self.quadruples) - 1
+        self.compiler.quadruples.append((start_label, 'jf', condition, None, None))
+        jump_location = len(self.compiler.quadruples) - 1
         self.match_delimiter()
         self.statement_list()
         self.match_delimiter()
         end_label = self.new_label()
-        self.compiler.quadruples.append((end_label, 'jump', None, None, end_label))
-        jump_location2 = len(self.quadruples) - 1
-        self.compiler.quadruples[jump_location] = (start_label, 'jfalse', condition, None, end_label)
+        self.compiler.quadruples.append((end_label, 'jmp', None, None, end_label))
+        jump_location2 = len(self.compiler.quadruples) - 1
+        void_label = self.new_label()
+        self.compiler.quadruples.append((void_label, None, None, None, None))
+        self.compiler.quadruples[jump_location] = (start_label, 'jf', condition, None, void_label)
         
         while self.cur and self.cur_val() in ['else']:
             self.match_word('keywords')
             
-            if self.cur and self.cur[1] == 'if':
+            if self.cur and self.cur_val() == 'if':
                 self.if_statement()
             else:
                 self.match_delimiter()
                 self.statement_list()
                 self.match_delimiter()
         
-        self.compiler.quadruples[jump_location2] = (end_label, 'jump', None, None, self.new_label())
+        self.compiler.quadruples[jump_location2] = (end_label, 'jmp', None, None, self.new_label())
         self.compiler.quadruples.append((self.get_label(), None, None, None, None))
 
     def factor(self):
@@ -289,10 +303,10 @@ class Parser:
                 raise SyntaxError(identifier + ' is not defined!')
             self.match_word('identifiers')
             return identifier
-        elif self.cur[0] in ['constant_int', 'constant_float', 'constant_char', 'constant_string']:
-            constant_value = self.cur_val()
-            self.match_constant()
-            return constant_value
+        elif self.cur[0] in ['constants_int', 'constants_float', 'constants_char', 'constants_string']:
+            constants_value = self.cur_val()
+            self.match_constants()
+            return constants_value
 
     def new_temp(self):
         if not hasattr(self,'temp_count'):
@@ -300,55 +314,3 @@ class Parser:
         temp_name = f't{self.temp_count}'
         self.temp_count += 1
         return temp_name
-
-# if __name__ == '__main__':
-#     tokens = [
-#         ('RESERVE_WORD','int'),
-#         ('IDENTIFIER','main'),
-#         ('DELIMITER','('),
-#         ('DELIMITER',')'),
-#         ('DELIMITER','{'),
-#         ('RESERVE_WORD','int'),
-#         ('IDENTIFIER','number'),
-#         ('DELIMITER',';'),
-#         ('RESERVE_WORD','int'),
-#         ('IDENTIFIER','a'),
-#         ('DELIMITER',';'),
-#         ('IDENTIFIER','number'),
-#         ('OPERATOR','='),
-#         ('CONSTANT','10'),
-#         ('DELIMITER',';'),
-#         ('RESERVE_WORD','if'),
-#         ('DELIMITER','('),
-#         ('IDENTIFIER','number'),
-#         ('OPERATOR','>'),
-#         ('CONSTANT','0'),
-#         ('DELIMITER',')'),
-#         ('DELIMITER','{'),
-#         ('IDENTIFIER','a'),
-#         ('OPERATOR','='),
-#         ('IDENTIFIER','number'),
-#         ('DELIMITER',';'),
-#         ('DELIMITER','}'),
-#         ('RESERVE_WORD','else'),
-#         ('DELIMITER','{'),
-#         ('IDENTIFIER','a'),
-#         ('OPERATOR','='),
-#         ('CONSTANT','2'),
-#         ('DELIMITER',';'),
-#         ('DELIMITER','}'),
-#         ('DELIMITER','}')
-#     ]
-
-
-
-#     # 创建解析器实例
-#     parser = Parser(tokens)
-
-#     # 开始解析
-
-#     parser.program()
-#     print(parser.symbol_table.table)
-#     # 如果没有抛出SyntaxError异常，说明解析成功
-#     print('解析成功！')
-#     print(parser.quadruples)
