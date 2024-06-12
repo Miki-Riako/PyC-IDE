@@ -20,7 +20,6 @@ class Widget(QFrame):
         self.setObjectName(text.replace(' ', '-'))
 
 class IDE(FluentWindow):
-    """Main Window"""
     def __init__(self):
         super().__init__()
         self.initWindow()
@@ -28,14 +27,15 @@ class IDE(FluentWindow):
         self.splashScreen.setIconSize(QSize(210, 210))
         self.show()
         self.createSubInterface()
-        
+
+        self.compiler = Compiler()
+
         self.homeInterface       = Home("Home Interface", self)
-        self.workspaceInterface  = Workspace('Workspace Interface', self)
         self.controllerInterface = Controller('Controller Interface', self)
+        self.workspaceInterface  = Workspace('Workspace Interface', self.compiler, self.controllerInterface, self)
         self.helperInterface     = Helper('Helper Interface', self)
         self.aboutInterface      = About('About Interface', self)
         self.settingInterface    = Setting('Setting Interface', self)
-        self.compiler            = Compiler()
 
         self.initNavigation()
         self.splashScreen.finish()

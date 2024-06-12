@@ -1,10 +1,60 @@
-from PySide6.QtWidgets import QApplication, QFrame
+from PySide6.QtCore import Qt, QUrl
+from PySide6.QtGui import QIcon, QDesktopServices
+from PySide6.QtWidgets import QApplication, QWidget, QTableWidgetItem, QVBoxLayout
+from qfluentwidgets import (NavigationItemPosition, MessageBox, setTheme, Theme,
+    NavigationAvatarWidget,  SplitFluentWindow, FluentTranslator, TableWidget)
+from qfluentwidgets import FluentIcon as FIF
 
-class Controller(QFrame):
+class Controller(QWidget):
     def __init__(self, text: str, parent=None):
         super().__init__(parent=parent)
         self.setupUi()
+        self.addTables()
         self.setObjectName(text.replace(' ', '-'))
 
     def setupUi(self):
-        ...
+        self.layout = QVBoxLayout(self)
+        self.setLayout(self.layout)
+    
+    def addTables(self):
+        self.infos = []
+
+        self.tokens_table = TableWidget(self);
+        self.quad_table = TableWidget(self);
+        self.tokens_table.setBorderVisible(True)
+        self.tokens_table.setBorderRadius(8)
+        self.tokens_table.setWordWrap(False)
+        self.tokens_table.setColumnCount(2)
+        self.quad_table.setBorderVisible(True)
+        self.quad_table.setBorderRadius(8)
+        self.quad_table.setWordWrap(False)
+        self.quad_table.setColumnCount(5)
+
+        self.layout.addWidget(self.tokens_table)
+        self.layout.addWidget(self.quad_table)
+
+        self.resetTokens([])
+        self.resetQuad([])
+
+    def resetTokens(self, tokens):
+        self.infos = tokens
+        self.tokens_table.setRowCount(len(self.infos))
+        for i in range(len(self.infos)):
+            self.tokens_table.setItem(i, 0, QTableWidgetItem(self.infos[i][0]))
+            self.tokens_table.setItem(i, 1, QTableWidgetItem(str(self.infos[i][1])))
+        
+        self.tokens_table.setHorizontalHeaderLabels(['Identifier', 'Index'])
+        self.tokens_table.verticalHeader().hide()
+
+    def resetQuad(self, quad):
+        self.infos = quad
+        self.quad_table.setRowCount(len(self.infos))
+        for i in range(len(self.infos)):
+            self.quad_table.setItem(i, 0, QTableWidgetItem(self.infos[i][0]))
+            self.quad_table.setItem(i, 1, QTableWidgetItem(str(self.infos[i][1])))
+            self.quad_table.setItem(i, 2, QTableWidgetItem(str(self.infos[i][2])))
+            self.quad_table.setItem(i, 3, QTableWidgetItem(str(self.infos[i][3])))
+            self.quad_table.setItem(i, 4, QTableWidgetItem(str(self.infos[i][4])))
+        
+        self.quad_table.setHorizontalHeaderLabels(['Index', 'Operation', 'Operand 1', 'Operand 2', 'Result'])
+        self.quad_table.verticalHeader().hide()

@@ -68,23 +68,32 @@ class KeywordHighlighter(QSyntaxHighlighter):
                 self.setFormat(match.capturedStart(), match.capturedLength(), self.string_format)
 
 class Workspace(QWidget):
-    def __init__(self, text: str, parent=None):
+    def __init__(self, text: str, compiler, controller, parent=None):
         super().__init__(parent=parent)
+
+        self.compiler = compiler
+        self.controller = controller
 
         self.vBoxLayout = QVBoxLayout(self)
         self.tabBoxLayout = QHBoxLayout(self)
         self.tabBar = TabBar(self)
-        self.searchButton = TransparentToolButton(FIF.PLAY.icon(color=QColor(206, 206, 206) if isDarkTheme() else QColor(96, 96, 96)), self)
+        self.runButton = TransparentToolButton(FIF.PLAY.icon(color=QColor(206, 206, 206) if isDarkTheme() else QColor(96, 96, 96)), self)
         self.stackedWidget = QStackedWidget(self)
-        
+
         self.new_edit = PlainTextEdit(self)
         self.new_edit.setPlaceholderText("New code...")
 
+        code = 'int main() {\n    int num;\n    int a;\n    num = 2;\n    if (num > 0) {\n        a = num;\n    } else {\n        a = 1;\n    }\n}'
+        self.new_edit.setPlainText(code)
+        
         self.__initWidget()
         self.saveShortcut = QShortcut(QKeySequence("Ctrl+S"), self)
         self.saveShortcut.activated.connect(self.save)
         self.runShortcut = QShortcut(QKeySequence("Ctrl+R"), self)
         self.runShortcut.activated.connect(self.run)
+        
+        self.runButton.clicked.connect(self.run)
+        
         self.setObjectName(text.replace(' ', '-'))
 
     def __initWidget(self):
@@ -96,7 +105,7 @@ class Workspace(QWidget):
         self.tabBar.setTabMaximumWidth(200)
 
         self.tabBoxLayout.addWidget(self.tabBar)
-        self.tabBoxLayout.addWidget(self.searchButton)
+        self.tabBoxLayout.addWidget(self.runButton)
         self.vBoxLayout.addLayout(self.tabBoxLayout)
         self.vBoxLayout.addWidget(self.stackedWidget)
         self.vBoxLayout.setContentsMargins(5, 5, 5, 5)
@@ -116,4 +125,8 @@ class Workspace(QWidget):
     def save(self):
         QMessageBox.information(self, "Save", "You pressed Ctrl+S. Waiting for save to be implemented...")
     def run(self):
-        QMessageBox.information(self, "Run", "You pressed Ctrl+R. Waiting for run to be implemented...")
+        self.compiler.code = self.new_edit.toPlainText()
+        self.compiler.compile()
+        self.controller.resetTokens(self.compiler.tokens)
+        self.controller.resetQuad(self.compiler.quadruples)
+        QMessageBox.information(self, "Run", "Complier Done.")
