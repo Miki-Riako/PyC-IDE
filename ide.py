@@ -1,5 +1,5 @@
 import os
-from compiler import Compiler
+from _compiler import Compiler
 
 from PySide6.QtCore import QSize, QEventLoop, QTimer
 from PySide6.QtGui import QIcon
@@ -11,12 +11,7 @@ from qfluentwidgets import setTheme, SplashScreen
 from qfluentwidgets import Theme
 from qfluentwidgets import FluentIcon as FIF
 
-from pages.home import Home
-from pages.workspace import Workspace
-from pages.controller import Controller
-from pages.helper import Helper
-from pages.about import About
-from pages.setting import Setting
+from pages import Home, Workspace, Controller, Helper, About, Setting
 
 class Widget(QFrame):
     def __init__(self, text: str, parent=None):

@@ -1,6 +1,4 @@
-from compiler.lexer import Lexer
-from compiler._parser import Parser
-from compiler.symbol_table import SymbolTable
+from compiler import Lexer, Parser, SymbolTable
 
 class Compiler:
     def __init__(self):

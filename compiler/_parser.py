@@ -277,7 +277,7 @@ class Parser:
         self.match_char('}')
         self.compiler.quadruples.append((self.new_label(), 'jump', None, None, begin_label))
         end_label = self.new_label()
-        self.compiler.quadruples.append((end_label, None, None, None, end_label))
+        self.compiler.quadruples.append((end_label, None, None, None, None))
         self.compiler.quadruples[jump_location] = (start_label, 'jf', condition, None, end_label)
 
     def if_statement(self):
