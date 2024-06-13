@@ -180,7 +180,7 @@ class Parser:
             self.expr_statement()
         elif self.cur_val() == 'return':
             self.return_statement()
-        elif self.cur_val() in ['if', 'while', 'do']:
+        elif self.cur_val() in ['if', 'while', 'do', 'for']:
             self.control_statement()
         elif self.cur_val() == '{':
             self.match_char('{')
@@ -212,6 +212,8 @@ class Parser:
             self.while_statement()
         elif self.cur_val() == 'do':
             self.do_while_statement()
+        elif self.cur_val() == 'for':
+            self.for_statement()
         else:
             self.compiler.error = 'Unknown control statement!'
             raise SyntaxError(self.compiler.error)
@@ -226,7 +228,11 @@ class Parser:
     def get_label(self):
         return f'{self.label_counter}'
 
-    def assignment_expr(self):
+    def remove_label(self):
+        self.label_counter -= 1
+        self.compiler.quadruples.pop()
+
+    def assignment_expr(self, insert=True):
         if self.cur[0] == 'identifiers':
             identifier = self.cur_val()
             
@@ -239,8 +245,11 @@ class Parser:
             if self.cur_val() in ['++', '--']:
                 operator = self.cur_val()
                 self.match_word('punctuation')
-                quad = (self.new_label(), operator, identifier, None, identifier)
-                self.compiler.quadruples.append(quad)
+                if insert:
+                    quad = (self.new_label(), operator, identifier, None, identifier)
+                    self.compiler.quadruples.append(quad)
+                else:
+                    quad = (None, operator, identifier, None, identifier)
                 return quad
             else:
                 self.match_word('punctuation')
@@ -248,8 +257,11 @@ class Parser:
                     self.compiler.error = 'Missing the expression!'
                     raise SyntaxError(self.compiler.error)
                 right_hand_side = self.add_expr()
-                assign_quad = (self.new_label(), '=', right_hand_side, None, identifier)
-                self.compiler.quadruples.append(assign_quad)
+                if insert:
+                    assign_quad = (self.new_label(), '=', right_hand_side, None, identifier)
+                    self.compiler.quadruples.append(assign_quad)
+                else:
+                    assign_quad = (None, '=', right_hand_side, None, identifier)
                 return assign_quad
         else:
             self.logical_expr()
@@ -327,14 +339,14 @@ class Parser:
         begin_label = self.get_label()
         start_label = self.new_label()
         self.compiler.quadruples.append((start_label, 'jf', condition, None, None))
-        jump_location = len(self.compiler.quadruples) - 1
+        jmp_location = len(self.compiler.quadruples) - 1
         self.match_char('{')
         self.code_lines()
         self.match_char('}')
-        self.compiler.quadruples.append((self.new_label(), 'jump', None, None, begin_label))
+        self.compiler.quadruples.append((self.new_label(), 'jmp', None, None, begin_label))
         end_label = self.new_label()
         self.compiler.quadruples.append((end_label, None, None, None, None))
-        self.compiler.quadruples[jump_location] = (start_label, 'jf', condition, None, end_label)
+        self.compiler.quadruples[jmp_location] = (start_label, 'jf', condition, None, end_label)
 
     def do_while_statement(self):
         self.match_char('do')
@@ -357,16 +369,16 @@ class Parser:
         self.match_char(')')
         start_label = self.new_label()
         self.compiler.quadruples.append((start_label, 'jf', condition, None, None))
-        jump_location = len(self.compiler.quadruples) - 1
+        jmp_location = len(self.compiler.quadruples) - 1
         self.match_char('{')
         self.code_lines()
         self.match_char('}')
         end_label = self.new_label()
         self.compiler.quadruples.append((end_label, 'jmp', None, None, end_label))
-        jump_location2 = len(self.compiler.quadruples) - 1
+        jmp_location2 = len(self.compiler.quadruples) - 1
         void_label = self.new_label()
         self.compiler.quadruples.append((void_label, None, None, None, None))
-        self.compiler.quadruples[jump_location] = (start_label, 'jf', condition, None, void_label)
+        self.compiler.quadruples[jmp_location] = (start_label, 'jf', condition, None, void_label)
         
         while self.cur and self.cur_val() in ['else']:
             self.match_word('keywords')
@@ -378,8 +390,36 @@ class Parser:
                 self.code_lines()
                 self.match_char('}')
         
-        self.compiler.quadruples[jump_location2] = (end_label, 'jmp', None, None, self.new_label())
+        self.compiler.quadruples[jmp_location2] = (end_label, 'jmp', None, None, self.new_label())
         self.compiler.quadruples.append((self.get_label(), None, None, None, None))
+
+    def for_statement(self):
+        self.match_char('for')
+        self.match_char('(')
+        self.assignment_expr()
+        self.match_char(';')
+        
+        condition = self.logical_expr()
+        self.match_char(';')
+        
+        increment = self.assignment_expr(False)
+        self.match_char(')')
+        
+        begin_label = self.get_label()
+        start_label = self.new_label()
+        self.compiler.quadruples.append((start_label, 'jf', condition, None, None))
+        jmp_location = len(self.compiler.quadruples) - 1
+        
+        self.match_char('{')
+        self.code_lines()
+        self.match_char('}')
+        
+        self.compiler.quadruples.append((self.new_label(), increment[1], increment[2], increment[3], increment[4]))
+        self.compiler.quadruples.append((self.new_label(), 'jmp', None, None, begin_label))
+        
+        end_label = self.new_label()
+        self.compiler.quadruples.append((end_label, None, None, None, None))
+        self.compiler.quadruples[jmp_location] = (start_label, 'jf', condition, None, end_label)
 
     def factor(self):
         if self.cur[0] == 'punctuation' and self.cur_val() == '(':

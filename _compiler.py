@@ -1,4 +1,4 @@
-from compiler import Lexer, Parser, SymbolTable, Interpreter
+from compiler import Lexer, Parser, SymbolTable, Interpreter, Optimizer
 
 class Compiler:
     def __init__(self):
@@ -31,6 +31,8 @@ class Compiler:
         parser.run()
         interpret = Interpreter(self)
         interpret.execute()
+        # optimizer = Optimizer(self)
+        # optimizer.optimize(self.quadruples)
     
     def show(self, target):
         if target == 'tokens':
@@ -57,25 +59,23 @@ if __name__ == '__main__':
     # compiler.code = input()
     if compiler.code == '':
         compiler.code = '''
-
 int main() {
-    int num;
-    int a;
-    num = 2;
-    if (num > 0) {
-        a = num;
-    } else {
-        a = 1;
+    int a, b, c;
+    a = 1;
+    b = 1;
+    while (a > 0) {
+        c = a + b;
+        a--;
     }
-    do {} while(1);
-    return 0;
+    if (c > 0) {
+        c = -2;
+    }
 }
-
 ''' # default example code
     compiler.compile()
-    # compiler.show('tokens')
-    # compiler.show('quadruples')
-    # compiler.show('variable')
+    compiler.show('tokens')
+    compiler.show('quadruples')
+    compiler.show('variable')
     print(compiler.tokens)
     print(compiler.quadruples)
     print(compiler.variables)
