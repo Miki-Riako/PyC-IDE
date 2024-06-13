@@ -5,7 +5,7 @@ class Compiler:
         self.keywords = [
             'int',   'void', 'break', 'float',  'while', 'do',      'struct',
             'const', 'case', 'for',   'return', 'if',    'default', 'else',
-            'char'
+            'char', 'switch'
         ]
         self.punctuation = [
             '-', '/', '(', ')', '==', '<=', '<', '+',

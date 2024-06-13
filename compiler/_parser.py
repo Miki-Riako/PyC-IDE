@@ -161,6 +161,9 @@ class Parser:
         while True:
             identifier = self.cur_val()
             self.match_word('identifiers')
+            if self.compiler.symbol_table.lookup(identifier):
+                self.compiler.error = 'Already defined identifier: ' + identifier
+                raise SyntaxError(self.compiler.error)
             self.compiler.symbol_table.add(identifier, {'type': var_type, 'scope': 'local'})
 
             if self.cur_val() == ';':

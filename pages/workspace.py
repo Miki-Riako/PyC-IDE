@@ -9,7 +9,8 @@ from PySide6.QtWidgets import (
 from qfluentwidgets import (
     CaptionLabel, PlainTextEdit, PushButton, CheckBox, BodyLabel, SpinBox, ComboBox, qrouter,
     NavigationItemPosition, MessageBox, TabBar, SubtitleLabel, setFont, TabCloseButtonDisplayMode, IconWidget,
-    TransparentDropDownToolButton, TransparentToolButton, setTheme, Theme, isDarkTheme
+    TransparentDropDownToolButton, TransparentToolButton, setTheme, Theme, isDarkTheme,
+    InfoBar, InfoBarPosition, InfoBarManager
     )
 from qfluentwidgets import FluentIcon as FIF
 
@@ -70,6 +71,8 @@ class KeywordHighlighter(QSyntaxHighlighter):
                 match = match_iterator.next()
                 self.setFormat(match.capturedStart(), match.capturedLength(), self.string_format)
 
+
+
 class Workspace(QWidget):
     def __init__(self, text: str, controller, parent=None):
         super().__init__(parent=parent)
@@ -92,7 +95,6 @@ class Workspace(QWidget):
         self.saveShortcut.activated.connect(self.save)
         self.runShortcut = QShortcut(QKeySequence("Ctrl+R"), self)
         self.runShortcut.activated.connect(self.run)
-        
         self.runButton.clicked.connect(self.run)
         
         self.setObjectName(text.replace(' ', '-'))
@@ -124,7 +126,16 @@ class Workspace(QWidget):
         )
 
     def save(self):
-        QMessageBox.information(self, "Save", "You pressed Ctrl+S. Waiting for save to be implemented...")
+        InfoBar.success(
+            title='Save',
+            content="You pressed Ctrl+S. Waiting for save to be implemented...",
+            orient=Qt.Horizontal,
+            isClosable=True,
+            position=InfoBarPosition.TOP,
+            duration=2000,
+            parent=self
+        )
+    
     def run(self):
         compiler = Compiler()
         compiler.code = self.new_edit.toPlainText()
@@ -142,11 +153,28 @@ class Workspace(QWidget):
             for var, value in compiler.variables.items():
                 variables_show.append((var, value))
             self.controller.resetVariables(variables_show)
-            QMessageBox.information(self, "Run", "Compilation Done.")
+            InfoBar.success(
+                title='Success!',
+                content="Compilation Done.\n\nWith respect, let's advance towards a new stage of the spin.",
+                orient=Qt.Horizontal,
+                isClosable=True,
+                position=InfoBarPosition.TOP,
+                duration=2000,
+                parent=self
+            )
 
             if DEBUG_MODE:
                 print(compiler.tokens)
                 print(compiler.quadruples)
                 print(compiler.variables)
+
         except Exception as e:
-            QMessageBox.critical(self, "Error", f"Compilation failed:\n{str(e)}")
+            InfoBar.error(
+                title='Error',
+                content=f"Compilation failed:\n{str(e)}\n\n迂回路を行けば最短ルート。",
+                orient=Qt.Horizontal,
+                isClosable=True,
+                position=InfoBarPosition.BOTTOM_RIGHT,
+                duration=-1,
+                parent=self
+            )
