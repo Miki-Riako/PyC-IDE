@@ -24,8 +24,7 @@ class Parser:
         self.parameter_list()
         self.match_char(')')
         self.match_char('{')
-        self.declaration_list()
-        self.statement_list()
+        self.code_lines()
         self.match_char('}')
 
     def next(self):
@@ -34,6 +33,15 @@ class Parser:
             self.cur = self.compiler.tokens[self.index]
         else:
             self.cur = None
+    
+    def get_val(self, token):
+        return getattr(self.compiler, token[0])[token[1]]
+    
+    def peek_next(self):
+        if self.index + 1 < len(self.compiler.tokens):
+            return self.compiler.tokens[self.index + 1]
+        else:
+            return None
     
     def match_word(self, type):
         if self.cur[0] == 'END':
@@ -128,7 +136,7 @@ class Parser:
         self.match_word('identifiers')
 
     def type(self):
-        if self.cur[0] == 'keywords' and self.cur_val() in ['int', 'float', 'char', 'void']:
+        if self.cur_val() in ['int', 'float', 'char', 'void']:
             type_name = self.cur_val()
             self.match_word('keywords')
             return type_name
@@ -136,9 +144,14 @@ class Parser:
             self.compiler.error = 'Expecting keyword, But got ' + self.cur_val()
             raise SyntaxError(self.compiler.error)
 
-    def declaration_list(self):
-        while self.cur[0] == 'keywords':
-            self.declaration()
+    def code_lines(self):
+        while True:
+            if self.cur_val() == '}':
+                break
+            elif self.cur_val() in ['int', 'float', 'char', 'void']:
+                self.declaration()
+            else:
+                self.statement()
 
     def declaration(self):
         var_type = self.type()
@@ -146,12 +159,6 @@ class Parser:
         self.match_word('identifiers')
         self.match_char(';')
         self.compiler.symbol_table.add(identifier, {'type': var_type, 'scope': 'local'})
-
-    def statement_list(self):
-        while self.cur and (self.cur[0] in ['identifiers', 'keywords', 'punctuation']):
-            if self.cur_val() == '}':
-                return
-            self.statement()
 
     def statement(self):
         if self.cur[0] == 'identifiers':
@@ -287,7 +294,7 @@ class Parser:
         self.compiler.quadruples.append((start_label, 'jf', condition, None, None))
         jump_location = len(self.compiler.quadruples) - 1
         self.match_char('{')
-        self.statement_list()
+        self.code_lines()
         self.match_char('}')
         self.compiler.quadruples.append((self.new_label(), 'jump', None, None, begin_label))
         end_label = self.new_label()
@@ -303,7 +310,7 @@ class Parser:
         self.compiler.quadruples.append((start_label, 'jf', condition, None, None))
         jump_location = len(self.compiler.quadruples) - 1
         self.match_char('{')
-        self.statement_list()
+        self.code_lines()
         self.match_char('}')
         end_label = self.new_label()
         self.compiler.quadruples.append((end_label, 'jmp', None, None, end_label))
@@ -319,7 +326,7 @@ class Parser:
                 self.if_statement()
             else:
                 self.match_char('{')
-                self.statement_list()
+                self.code_lines()
                 self.match_char('}')
         
         self.compiler.quadruples[jump_location2] = (end_label, 'jmp', None, None, self.new_label())
