@@ -54,6 +54,7 @@ class IDE(FluentWindow):
         self.resize(900, 700)
         self.setWindowIcon(QIcon(os.path.join(os.path.dirname(__file__), 'images', 'SOSlogo.png')))
         self.setWindowTitle('欢迎！Welcome to PyC-IDE')
+        self.showMaximized()
 
     def createSubInterface(self):
         loop = QEventLoop(self)

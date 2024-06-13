@@ -43,6 +43,8 @@ class Compiler:
             print('Invalid target.')
     
     def val_token(self, token):
+        if token[0] == 'END':
+            return 'END'
         return getattr(self, token[0])[token[1]]
 
 if __name__ == '__main__':

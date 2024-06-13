@@ -70,7 +70,6 @@ class KeywordHighlighter(QSyntaxHighlighter):
 class Workspace(QWidget):
     def __init__(self, text: str, compiler, controller, parent=None):
         super().__init__(parent=parent)
-
         self.compiler = compiler
         self.controller = controller
 
@@ -127,6 +126,9 @@ class Workspace(QWidget):
     def run(self):
         self.compiler.code = self.new_edit.toPlainText()
         self.compiler.compile()
-        self.controller.resetTokens(self.compiler.tokens)
+        token_show = []
+        for i in range(len(self.compiler.tokens)):
+            token_show.append((self.compiler.tokens[i][0], self.compiler.tokens[i][1], self.compiler.val_token(self.compiler.tokens[i])))
+        self.controller.resetTokens(token_show)
         self.controller.resetQuad(self.compiler.quadruples)
         QMessageBox.information(self, "Run", "Complier Done.")
