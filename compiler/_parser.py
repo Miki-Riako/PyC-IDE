@@ -175,6 +175,8 @@ class Parser:
     def statement(self):
         if self.cur[0] == 'identifiers':
             self.expr_statement()
+        elif self.cur_val() == 'return':
+            self.return_statement()
         elif self.cur_val() in ['if', 'while']:
             self.control_statement()
         elif self.cur_val() == '{':
@@ -190,6 +192,15 @@ class Parser:
             self.compiler.error = 'Missing ";"!'
             raise SyntaxError(self.compiler.error)
         self.match_delimiter()
+
+    def return_statement(self):
+        self.match_word('keywords')
+        if self.cur[0] in ['identifiers', 'constants_int', 'constants_float', 'constants_char', 'constants_string']:
+            return_expr = self.expr()
+        else:
+            return_expr = None
+        self.compiler.quadruples.append((self.new_label(), 'return', return_expr, None, None))
+        self.match_char(';')
 
     def control_statement(self):
         if self.cur_val() == 'if':

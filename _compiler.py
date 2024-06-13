@@ -56,36 +56,21 @@ if __name__ == '__main__':
     compiler = Compiler()
     # compiler.code = input()
     if compiler.code == '':
-#         compiler.code = '''
-
-# int main() {
-#     int num;
-#     int a;
-#     num = 2;
-#     if (num > 0) {
-#         a = num;
-#     } else {
-#         a = 1;
-#     }
-# }
-
-# ''' # default example code
         compiler.code = '''
+
 int main() {
-    int a, b;
-    int c;
-    a = 5;
-    b = 5;
-    while (a>0) {
-        c = a + b;
-        a--;
+    int num;
+    int a;
+    num = 2;
+    if (num > 0) {
+        a = num;
+    } else {
+        a = 1;
     }
-    if(c>10) {
-        c = 10;
-    }
+    return 0;
 }
-}
-'''
+
+''' # default example code
     compiler.compile()
     # compiler.show('tokens')
     # compiler.show('quadruples')

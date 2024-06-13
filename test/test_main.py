@@ -179,3 +179,28 @@ int main() {
         assert False
     except Exception:
         assert compiler.error == "Expecting keyword, But got }"
+
+def test_c9():
+    compiler = Compiler()
+    compiler.code = '''
+int main() {
+    int num;
+    char a;
+    num = 2;
+    if (num > 0) {
+        a = 'n';
+    } else if (num == 0) {
+        a = 'e';
+    } else {
+        a = 'u';
+    }
+}
+    '''
+    compiler.compile()
+
+    assert compiler.error == ''
+    assert str(compiler.tokens) == "[('keywords', 0), ('identifiers', 0), ('punctuation', 2), ('punctuation', 3), ('punctuation', 14), ('keywords', 0), ('identifiers', 1), ('punctuation', 12), ('keywords', 14), ('identifiers', 2), ('punctuation', 12), ('identifiers', 1), ('punctuation', 10), ('constants_int', 0), ('punctuation', 12), ('keywords', 11), ('punctuation', 2), ('identifiers', 1), ('punctuation', 9), ('constants_int', 1), ('punctuation', 3), ('punctuation', 14), ('identifiers', 2), ('punctuation', 10), ('constants_char', 0), ('punctuation', 12), ('punctuation', 15), ('keywords', 13), ('keywords', 11), ('punctuation', 2), ('identifiers', 1), ('punctuation', 4), ('constants_int', 1), ('punctuation', 3), ('punctuation', 14), ('identifiers', 2), ('punctuation', 10), ('constants_char', 1), ('punctuation', 12), ('punctuation', 15), ('keywords', 13), ('punctuation', 14), ('identifiers', 2), ('punctuation', 10), ('constants_char', 2), ('punctuation', 12), ('punctuation', 15), ('punctuation', 15), ('END', -1)]"
+    assert str(compiler.quadruples) == "[('1', '=', '2', None, 'num'), ('2', '>', 'num', '0', 't0'), ('3', 'jf', 't0', None, '6'), ('4', '=', 'n', None, 'a'), ('5', 'jmp', None, None, '14'), ('6', None, None, None, None), ('7', '==', 'num', '0', 't1'), ('8', 'jf', 't1', None, '11'), ('9', '=', 'e', None, 'a'), ('10', 'jmp', None, None, '13'), ('11', None, None, None, None), ('12', '=', 'u', None, 'a'), ('13', None, None, None, None), ('14', None, None, None, None)]"
+    assert str(compiler.variables) == "{'num': '2', 't0': True, 'a': 'n'}"
+
+

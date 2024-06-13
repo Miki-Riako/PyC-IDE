@@ -13,6 +13,8 @@ from qfluentwidgets import (
     )
 from qfluentwidgets import FluentIcon as FIF
 
+DEBUG_MODE = True
+
 class KeywordHighlighter(QSyntaxHighlighter):
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -141,5 +143,10 @@ class Workspace(QWidget):
                 variables_show.append((var, value))
             self.controller.resetVariables(variables_show)
             QMessageBox.information(self, "Run", "Compilation Done.")
+
+            if DEBUG_MODE:
+                print(compiler.tokens)
+                print(compiler.quadruples)
+                print(compiler.variables)
         except Exception as e:
             QMessageBox.critical(self, "Error", f"Compilation failed:\n{str(e)}")
