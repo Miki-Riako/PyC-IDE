@@ -49,11 +49,38 @@ class Compiler:
 
 if __name__ == '__main__':
     compiler = Compiler()
-    # compiler.code = input()
+    compiler.code = input()
     if compiler.code == '':
-        compiler.code = 'int main() { int num; int a; num = 2; if (num > 0) { a = num; } else { a = 1; } }'
+#         compiler.code = '''
 
+# int main() {
+#     int num;
+#     int a;
+#     num = 2;
+#     if (num > 0) {
+#         a = num;
+#     } else {
+#         a = 1;
+#     }
+# }
+
+#     ''' # default example code
+        compiler.code = '''
+int main() {
+    int num;
+    num = 1;
+    num = 0;
+    int a;
+    if (num > 0) {
+        a = num;
+    } else {
+        a = 2;
+    }
+}
+'''
     compiler.compile()
-    compiler.show('tokens')
-    compiler.show('quadruples')
+    # compiler.show('tokens')
+    # compiler.show('quadruples')
+    print(compiler.tokens)
+    print(compiler.quadruples)
     print('No errors found.')

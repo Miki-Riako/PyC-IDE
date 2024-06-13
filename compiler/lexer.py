@@ -84,7 +84,7 @@ class Lexer:
             
             if not self.compiler.code[pos].isspace():
                 self.compiler.error = 'Invalid character: ' + self.compiler.code[pos]
-                return
+                raise SyntaxError(self.compiler.error)
             
             pos += 1
     

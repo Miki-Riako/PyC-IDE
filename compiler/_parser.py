@@ -35,11 +35,13 @@ class Parser:
     def match_word(self, type):
         if self.cur[0] == 'END':
             if self.bracket_stack:
-                raise SyntaxError('Bracket no matched!')
+                self.compiler.error = 'Bracket no matched!'
+                raise SyntaxError(self.compiler.error)
             return
         
         if self.cur[0] != type:
-            raise SyntaxError('Expecting: ' + type + ', But get ' + self.cur[0])
+            self.compiler.error = 'Expecting: ' + type + ', But get ' + self.cur_val()
+            raise SyntaxError(self.compiler.error)
         
         if self.cur_val() in ['(', '{']:
             self.bracket_stack.append(self.cur_val())
@@ -47,7 +49,8 @@ class Parser:
             if not self.bracket_stack or \
             (self.cur_val() == ')' and self.bracket_stack[-1] != '(') or \
             (self.cur_val() == '}' and self.bracket_stack[-1] != '{'):
-                raise SyntaxError('Bracket no matched!')
+                self.compiler.error = 'Bracket no matched!'
+                raise SyntaxError(self.compiler.error)
             self.bracket_stack.pop()
         
         self.next()
@@ -55,11 +58,13 @@ class Parser:
     def match_char(self, char):
         if self.cur[0] == 'END':
             if self.bracket_stack:
-                raise SyntaxError('Bracket no matched!')
+                self.compiler.error = 'Bracket no matched!'
+                raise SyntaxError(self.compiler.error)
             return
         
         if self.cur_val() != char:
-            raise SyntaxError('Expecting: ' + char + ', But get ' + self.cur[0])
+            self.compiler.error = 'Expecting: ' + char + ', But get ' + self.cur_val()
+            raise SyntaxError(self.compiler.error)
         
         if self.cur_val() in ['(', '{']:
             self.bracket_stack.append(self.cur_val())
@@ -67,7 +72,8 @@ class Parser:
             if not self.bracket_stack or \
             (self.cur_val() == ')' and self.bracket_stack[-1] != '(') or \
             (self.cur_val() == '}' and self.bracket_stack[-1] != '{'):
-                raise SyntaxError('Bracket no matched!')
+                self.compiler.error = 'Bracket no matched!'
+                raise SyntaxError(self.compiler.error)
             self.bracket_stack.pop()
         
         self.next()
@@ -75,28 +81,33 @@ class Parser:
     def match_constants(self):
         if self.cur[0] == 'END':
             if self.bracket_stack:
-                raise SyntaxError('Bracket no matched!')
+                self.compiler.error = 'Bracket no matched!'
+                raise SyntaxError(self.compiler.error)
             return
         
         if self.cur[0] not in ['constants_int', 'constants_float', 'constants_char', 'constants_string']:
-            raise SyntaxError('Expecting: constants, But get ' + self.cur[0])
+            self.compiler.error = 'Expecting: constants, But get ' + self.cur_val()
+            raise SyntaxError(self.compiler.error)
         self.next()
 
     def match_delimiter(self):
         if self.cur[0] == 'END':
             if self.bracket_stack:
-                raise SyntaxError('Bracket no matched!')
+                self.compiler.error = 'Bracket no matched!'
+                raise SyntaxError(self.compiler.error)
             return
         
         if not self.is_delimiter():
-            raise SyntaxError('Expecting: delimiter, But get ' + self.cur[0])
-        if self.cur_val in ['(', '{']:
-            self.bracket_stack.append(self.cur_val)
-        elif self.cur_val in [')', '}']:
+            self.compiler.error = 'Expecting: delimiter, But get ' + self.cur_val()
+            raise SyntaxError(self.compiler.error)
+        if self.cur_val() in ['(', '{']:
+            self.bracket_stack.append(self.cur_val())
+        elif self.cur_val() in [')', '}']:
             if not self.bracket_stack or \
-            (self.cur_val == ')' and self.bracket_stack[-1] != '(') or \
-            (self.cur_val == '}' and self.bracket_stack[-1] != '{'):
-                raise SyntaxError('Bracket no matched!')
+            (self.cur_val() == ')' and self.bracket_stack[-1] != '(') or \
+            (self.cur_val() == '}' and self.bracket_stack[-1] != '{'):
+                self.compiler.error = 'Bracket no matched!'
+                raise SyntaxError(self.compiler.error)
             self.bracket_stack.pop()
         
         self.next()
@@ -119,7 +130,8 @@ class Parser:
             self.match_word('keywords')
             return type_name
         else:
-            raise SyntaxError('Expecting Keywords!')
+            self.compiler.error = 'Expecting keyword, But get ' + self.cur_val()
+            raise SyntaxError(self.compiler.error)
 
     def compound_statement(self):
         self.match_char('{')
@@ -135,11 +147,11 @@ class Parser:
         var_type = self.type()
         identifier = self.cur_val()
         self.match_word('identifiers')
-        self.match_delimiter()
+        self.match_char(';')
         self.compiler.symbol_table.add(identifier, {'type':var_type, 'scope':'local'})
 
     def statement_list(self):
-        while self.cur and (self.cur[0] in ['identifiers', 'keywords'] or self.is_delimiter()):
+        while self.cur and (self.cur[0] in ['identifiers', 'keywords', 'punctuation']):
             if self.cur_val() == '}':
                 return
             self.statement()
@@ -157,7 +169,8 @@ class Parser:
     def expr_statement(self):
         self.expr()
         if not self.is_delimiter() or self.cur_val() != ';':
-            raise SyntaxError('Missing ";"!')
+            self.compiler.error = 'Missing ";"!'
+            raise SyntaxError(self.compiler.error)
         self.match_delimiter()
 
     def control_statement(self):
@@ -166,7 +179,8 @@ class Parser:
         elif self.cur_val() == 'while':
             self.while_statement()
         else:
-            raise SyntaxError('Unknown control statement!')
+            self.compiler.error = 'Unknown control statement!'
+            raise SyntaxError(self.compiler.error)
 
     def expr(self):
         return self.assignment_expr()
@@ -182,7 +196,8 @@ class Parser:
         if self.cur[0] == 'identifiers':
             identifier = self.cur_val()
             if not self.compiler.symbol_table.lookup(identifier):
-                raise SyntaxError('Unknown identifier: ' + identifier)
+                self.compiler.error = 'Unknown identifier: ' + identifier
+                raise SyntaxError(self.compiler.error)
             self.match_word('identifiers')
 
             if self.cur_val() in ['++', '--']:
@@ -194,7 +209,8 @@ class Parser:
             else:
                 self.match_word('punctuation')
                 if self.cur[0] not in ['identifiers', 'constants_int', 'constants_float', 'constants_char', 'constants_string']:
-                    raise SyntaxError('Missing the expression!')
+                    self.compiler.error = 'Missing the expression!'
+                    raise SyntaxError(self.compiler.error)
                 right_hand_side = self.add_expr()
                 assign_quad = (self.new_label(), '=', right_hand_side, None, identifier)
                 self.compiler.quadruples.append(assign_quad)
@@ -239,7 +255,8 @@ class Parser:
                 right = '1'
             else:
                 if self.cur[0] not in ['identifiers', 'constants_int', 'constants_float']:
-                    raise SyntaxError('Missing the number after add or sub!')
+                    self.compiler.error = 'Missing the number after add or sub!'
+                    raise SyntaxError(self.compiler.error)
                 right = self.mul_expression()
             
             temp_var = self.new_temp()
@@ -320,7 +337,8 @@ class Parser:
         elif self.cur[0] == 'identifiers':
             identifier = self.cur_val()
             if not self.compiler.symbol_table.lookup(identifier):
-                raise SyntaxError(identifier + ' is not defined!')
+                self.compiler.error = identifier + ' is not defined!'
+                raise SyntaxError(self.compiler.error)
             self.match_word('identifiers')
             return identifier
         elif self.cur[0] in ['constants_int', 'constants_float', 'constants_char', 'constants_string']:

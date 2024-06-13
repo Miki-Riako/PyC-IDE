@@ -126,10 +126,16 @@ class Workspace(QWidget):
     def run(self):
         compiler = Compiler()
         compiler.code = self.new_edit.toPlainText()
-        compiler.compile()
-        token_show = []
-        for i in range(len(compiler.tokens)):
-            token_show.append((compiler.tokens[i][0], compiler.tokens[i][1], compiler.val_token(compiler.tokens[i])))
-        self.controller.resetTokens(token_show)
-        self.controller.resetQuad(compiler.quadruples)
-        QMessageBox.information(self, "Run", "Complier Done.")
+
+        try:
+            compiler.compile()
+            if compiler.error:
+                raise Exception(compiler.error)
+            token_show = []
+            for i in range(len(compiler.tokens)):
+                token_show.append((compiler.tokens[i][0], compiler.tokens[i][1], compiler.val_token(compiler.tokens[i])))
+            self.controller.resetTokens(token_show)
+            self.controller.resetQuad(compiler.quadruples)
+            QMessageBox.information(self, "Run", "Compilation Done.")
+        except Exception as e:
+            QMessageBox.critical(self, "Error", f"Compilation failed:\n{str(e)}")
