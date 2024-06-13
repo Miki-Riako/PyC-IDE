@@ -28,11 +28,11 @@ class IDE(FluentWindow):
         self.show()
         self.createSubInterface()
 
-        self.compiler = Compiler()
+        self.compiler = None
 
         self.homeInterface       = Home("Home Interface", self)
         self.controllerInterface = Controller('Controller Interface', self)
-        self.workspaceInterface  = Workspace('Workspace Interface', self.compiler, self.controllerInterface, self)
+        self.workspaceInterface  = Workspace('Workspace Interface', self.controllerInterface, self)
         self.helperInterface     = Helper('Helper Interface', self)
         self.aboutInterface      = About('About Interface', self)
         self.settingInterface    = Setting('Setting Interface', self)

@@ -1,7 +1,7 @@
 .run
 .vscode
 data
-usefulscript.py
+cp.py
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

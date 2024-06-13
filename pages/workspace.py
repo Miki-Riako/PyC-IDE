@@ -1,3 +1,4 @@
+from _compiler import Compiler
 from PySide6.QtCore import Qt, QSize, QUrl, QPoint, QRegularExpression
 from PySide6.QtGui import QKeySequence, QShortcut, QIcon, QDesktopServices, QColor, QFont, QSyntaxHighlighter, QTextCharFormat
 from PySide6.QtWidgets import (
@@ -68,9 +69,8 @@ class KeywordHighlighter(QSyntaxHighlighter):
                 self.setFormat(match.capturedStart(), match.capturedLength(), self.string_format)
 
 class Workspace(QWidget):
-    def __init__(self, text: str, compiler, controller, parent=None):
+    def __init__(self, text: str, controller, parent=None):
         super().__init__(parent=parent)
-        self.compiler = compiler
         self.controller = controller
 
         self.vBoxLayout = QVBoxLayout(self)
@@ -124,11 +124,12 @@ class Workspace(QWidget):
     def save(self):
         QMessageBox.information(self, "Save", "You pressed Ctrl+S. Waiting for save to be implemented...")
     def run(self):
-        self.compiler.code = self.new_edit.toPlainText()
-        self.compiler.compile()
+        compiler = Compiler()
+        compiler.code = self.new_edit.toPlainText()
+        compiler.compile()
         token_show = []
-        for i in range(len(self.compiler.tokens)):
-            token_show.append((self.compiler.tokens[i][0], self.compiler.tokens[i][1], self.compiler.val_token(self.compiler.tokens[i])))
+        for i in range(len(compiler.tokens)):
+            token_show.append((compiler.tokens[i][0], compiler.tokens[i][1], compiler.val_token(compiler.tokens[i])))
         self.controller.resetTokens(token_show)
-        self.controller.resetQuad(self.compiler.quadruples)
+        self.controller.resetQuad(compiler.quadruples)
         QMessageBox.information(self, "Run", "Complier Done.")
