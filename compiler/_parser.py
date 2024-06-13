@@ -155,10 +155,19 @@ class Parser:
 
     def declaration(self):
         var_type = self.type()
-        identifier = self.cur_val()
-        self.match_word('identifiers')
-        self.match_char(';')
-        self.compiler.symbol_table.add(identifier, {'type': var_type, 'scope': 'local'})
+        while True:
+            identifier = self.cur_val()
+            self.match_word('identifiers')
+            self.compiler.symbol_table.add(identifier, {'type': var_type, 'scope': 'local'})
+
+            if self.cur_val() == ';':
+                self.match_char(';')
+                break
+            elif self.cur_val() == ',':
+                self.match_char(',')
+            else:
+                self.compiler.error = 'Expecting "," or ";" in declaration, But got ' + self.cur_val()
+                raise SyntaxError(self.compiler.error)
 
     def statement(self):
         if self.cur[0] == 'identifiers':
@@ -166,7 +175,9 @@ class Parser:
         elif self.cur_val() in ['if', 'while']:
             self.control_statement()
         elif self.cur_val() == '{':
-            self.compound_statement()
+            self.match_char('{')
+            self.code_lines()
+            self.match_char('}')
         else:
             self.match_delimiter()
 
@@ -199,9 +210,11 @@ class Parser:
     def assignment_expr(self):
         if self.cur[0] == 'identifiers':
             identifier = self.cur_val()
+            
             if not self.compiler.symbol_table.lookup(identifier):
                 self.compiler.error = 'Unknown identifier: ' + identifier
                 raise SyntaxError(self.compiler.error)
+            
             self.match_word('identifiers')
 
             if self.cur_val() in ['++', '--']:

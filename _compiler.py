@@ -9,7 +9,8 @@ class Compiler:
         ]
         self.punctuation = [
             '-', '/', '(', ')', '==', '<=', '<', '+',
-            '*', '>', '=', ',', ';',  '++', '{', '}'
+            '*', '>', '=', ',', ';',  '++', '{', '}',
+            '--'
         ]
         self.identifiers      = []
         self.constants_int    = []
@@ -71,15 +72,17 @@ if __name__ == '__main__':
 # ''' # default example code
         compiler.code = '''
 int main() {
-    int a, b, c;
-    a = 1;
-    b = 1;
-    while (a > 0) {
+    int a;
+    int b;
+    int c;
+    a = 5;
+    b = 5
+    while (a>0) {
         c = a + b;
         a--;
     }
-    if (c > 0) {
-        c = -2;
+    if(c>10) {
+        c = 10;
     }
 }
 '''

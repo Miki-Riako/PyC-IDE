@@ -8,7 +8,8 @@ class Interpreter:
             if quad[0]:
                 self.labels[quad[0]] = i
 
-        for i in range(len(self.compiler.quadruples)):
+        i = 0
+        while i < len(self.compiler.quadruples):
             quad = self.compiler.quadruples[i]
             op = quad[1] if len(quad) > 1 else None
             arg1 = quad[2] if len(quad) > 2 else None
@@ -30,3 +31,4 @@ class Interpreter:
                 continue
             elif op in ['++', '--']:
                 self.compiler.variables[result] = eval(f"{self.compiler.variables.get(arg1, arg1)} {op[0]} 1")
+            i += 1

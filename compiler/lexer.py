@@ -4,10 +4,10 @@ class Lexer:
     def __init__(self, compiler):
         self.compiler = compiler
         self.re_keywords    = re.compile(r'\b(' + '|'.join(self.compiler.keywords) + r')\b')
-        self.re_punctuation = re.compile(r'==|<=|>=|\+\+|[-/()<+*>=,;{}]')
+        self.re_punctuation = re.compile(r'==|<=|>=|\+\+|--|[-/()<+*>=,;{}]')
         self.re_identifier  = re.compile(r'\b[a-zA-Z_][a-zA-Z0-9_]*\b')
-        self.re_float       = re.compile(r'\b\d+(\.\d+([eE][+-]?\d+)?|[eE][+-]?\d+)\b')
-        self.re_decimal     = re.compile(r'\b\d+\b')
+        self.re_float       = re.compile(r'-?\b\d+(\.\d+([eE][+-]?\d+)?|[eE][+-]?\d+)\b')
+        self.re_decimal     = re.compile(r'-?\b\d+\b')
         self.re_hexadecimal = re.compile(r'\b0[xX][0-9a-fA-F]+\b')
         self.re_char        = re.compile(r"'([^'\\]|\\.)'")
         self.re_string      = re.compile(r'"((?:[^"\\]|\\.)*)"')
@@ -87,9 +87,40 @@ class Lexer:
                 raise SyntaxError(self.compiler.error)
             
             pos += 1
+        
+        self.post_process_tokens()
     
     def append_token(self, type, val):
         self.compiler.tokens.append(self.make_token(type, val))
     
     def make_token(self, type, val):
         return (type, getattr(self.compiler, type).index(val))
+
+    def post_process_tokens(self):
+        processed_tokens = []
+        i = 0
+        
+        while i < len(self.compiler.tokens):
+            token = self.compiler.tokens[i]
+            
+            if token[0] == 'punctuation' and self.compiler.punctuation[token[1]] == '-':
+                if i > 0 and self.compiler.tokens[i-1][0] in ['punctuation', 'keywords'] and self.compiler.tokens[i-1][1] != self.compiler.punctuation.index(')'):
+                    if i < len(self.compiler.tokens) - 1 and self.compiler.tokens[i+1][0] in ['constants_int', 'constants_float']:
+                        next_token = self.compiler.tokens[i+1]
+                        if next_token[0] == 'constants_int':
+                            new_val = '-' + self.compiler.constants_int[next_token[1]]
+                            self.compiler.constants_int[next_token[1]] = new_val
+                        elif next_token[0] == 'constants_float':
+                            new_val = '-' + self.compiler.constants_float[next_token[1]]
+                            self.compiler.constants_float[next_token[1]] = new_val
+                        
+                        new_type = next_token[0]
+                        self.compiler.tokens.pop(i+1)
+                        processed_tokens.append(self.make_token(new_type, new_val))
+                        i += 1
+                        continue
+            
+            processed_tokens.append(token)
+            i += 1
+        
+        self.compiler.tokens = processed_tokens
