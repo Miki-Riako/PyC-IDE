@@ -136,6 +136,10 @@ class Workspace(QWidget):
                 token_show.append((compiler.tokens[i][0], compiler.tokens[i][1], compiler.val_token(compiler.tokens[i])))
             self.controller.resetTokens(token_show)
             self.controller.resetQuad(compiler.quadruples)
+            variables_show = []
+            for var, value in compiler.variables.items():
+                variables_show.append((var, value))
+            self.controller.resetVariables(variables_show)
             QMessageBox.information(self, "Run", "Compilation Done.")
         except Exception as e:
             QMessageBox.critical(self, "Error", f"Compilation failed:\n{str(e)}")

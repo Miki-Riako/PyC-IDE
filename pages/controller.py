@@ -19,6 +19,7 @@ class Controller(QWidget):
     def addTables(self):
         self.tokens_table = TableWidget(self)
         self.quad_table = TableWidget(self)
+        self.variables_table = TableWidget(self)
         self.tokens_table.setBorderVisible(True)
         self.tokens_table.setBorderRadius(8)
         self.tokens_table.setWordWrap(False)
@@ -27,12 +28,17 @@ class Controller(QWidget):
         self.quad_table.setBorderRadius(8)
         self.quad_table.setWordWrap(False)
         self.quad_table.setColumnCount(5)
-
+        self.variables_table.setBorderVisible(True)
+        self.variables_table.setBorderRadius(8)
+        self.variables_table.setWordWrap(False)
+        self.variables_table.setColumnCount(2)
         self.layout.addWidget(self.tokens_table)
         self.layout.addWidget(self.quad_table)
+        self.layout.addWidget(self.variables_table)
 
         self.resetTokens([])
         self.resetQuad([])
+        self.resetVariables([])
 
     def resetTokens(self, tokens):
         self.infos = tokens
@@ -61,3 +67,15 @@ class Controller(QWidget):
         self.quad_table.verticalHeader().hide()
         self.quad_table.resizeColumnsToContents()
         self.quad_table.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
+
+    def resetVariables(self, variables):
+        self.infos = variables
+        self.variables_table.setRowCount(len(self.infos))
+        for i in range(len(self.infos)):
+            self.variables_table.setItem(i, 0, QTableWidgetItem(self.infos[i][0]))
+            self.variables_table.setItem(i, 1, QTableWidgetItem(str(self.infos[i][1])))
+        
+        self.variables_table.setHorizontalHeaderLabels(['对象 Operand', '值 Value'])
+        self.variables_table.verticalHeader().hide()
+        self.variables_table.resizeColumnsToContents()
+        self.variables_table.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)

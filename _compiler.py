@@ -1,4 +1,4 @@
-from compiler import Lexer, Parser, SymbolTable
+from compiler import Lexer, Parser, SymbolTable, Interpreter
 
 class Compiler:
     def __init__(self):
@@ -19,6 +19,7 @@ class Compiler:
         self.tokens           = []
         self.symbol_table     = SymbolTable()
         self.quadruples       = []
+        self.variables = {}
         self.code  = ''
         self.error = ''
     
@@ -27,18 +28,21 @@ class Compiler:
         lexer.tokenize()
         parser = Parser(self)
         parser.run()
-        # interpret = Interpreter(self)
-        # interpret.execute()
+        interpret = Interpreter(self)
+        interpret.execute()
     
     def show(self, target):
-        if (target == 'tokens'):
+        if target == 'tokens':
             for token in self.tokens:
                 print(token)
-        elif (target == 'symbol_table'):
+        elif target == 'symbol_table':
             self.symbol_table.show()
-        elif (target == 'quadruples'):
+        elif target == 'quadruples':
             for quadruple in self.quadruples:
                 print(quadruple)
+        elif target == 'variable':
+            for var, value in self.variables.items():
+                print(f"{var} = {value}")
         else:
             print('Invalid target.')
     
@@ -51,36 +55,38 @@ if __name__ == '__main__':
     compiler = Compiler()
     # compiler.code = input()
     if compiler.code == '':
-#         compiler.code = '''
-
-# int main() {
-#     int num;
-#     int a;
-#     num = 2;
-#     if (num > 0) {
-#         a = num;
-#     } else {
-#         a = 1;
-#     }
-# }
-
-#     ''' # default example code
         compiler.code = '''
+
 int main() {
     int num;
-    num = 1;
-    num = 0;
     int a;
+    num = 2;
     if (num > 0) {
         a = num;
     } else {
-        a = 2;
+        a = 1;
     }
 }
-'''
+
+    ''' # default example code
+#         compiler.code = '''
+# int main() {
+#     int num;
+#     num = 1;
+#     num = 0;
+#     int a;
+#     if (num > 0) {
+#         a = num;
+#     } else {
+#         a = 2;
+#     }
+# }
+# '''
     compiler.compile()
-    # compiler.show('tokens')
-    # compiler.show('quadruples')
-    print(compiler.tokens)
-    print(compiler.quadruples)
+    compiler.show('tokens')
+    compiler.show('quadruples')
+    compiler.show('variable')
+    # print(compiler.tokens)
+    # print(compiler.quadruples)
+    # print(compiler.variables)
     print('No errors found.')
