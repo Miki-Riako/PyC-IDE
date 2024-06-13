@@ -112,3 +112,70 @@ int main() {
         assert False
     except Exception:
         assert compiler.error == 'Missing ";"!'
+
+def test_c6():
+    compiler = Compiler()
+    compiler.code = '''
+int main() {
+    int b, c;
+    a = 1;
+    b = 1
+    while (a > 0) {
+        c = a + b;
+        a--;
+    }
+    if (c > 0) {
+        c = -2;
+    }
+}
+    '''
+    try:
+        compiler.compile()
+        assert False
+    except Exception:
+        assert compiler.error == 'Unknown identifier: a'
+
+def test_c7():
+    compiler = Compiler()
+    compiler.code = '''
+int main() {
+    int a, b, c;
+    a = 1;
+    b = 1;
+    while (a > 0) {
+        c = a + b;
+        a--;
+    }
+    if (c > 0) {
+        c = -2;
+    }
+
+    '''
+    try:
+        compiler.compile()
+        assert False
+    except Exception:
+        assert compiler.error == "Bracket not matched!"
+
+def test_c8():
+    compiler = Compiler()
+    compiler.code = '''
+int main() {
+    int a, b, c;
+    a = 1;
+    b = 1;
+    while (a > 0) {
+        c = a + b;
+        a--;
+    }
+    if (c > 0) {
+        c = -2;
+    }
+}
+}
+    '''
+    try:
+        compiler.compile()
+        assert False
+    except Exception:
+        assert compiler.error == "Expecting keyword, But got }"

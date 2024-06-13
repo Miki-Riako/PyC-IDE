@@ -72,11 +72,10 @@ if __name__ == '__main__':
 # ''' # default example code
         compiler.code = '''
 int main() {
-    int a;
-    int b;
+    int a, b;
     int c;
     a = 5;
-    b = 5
+    b = 5;
     while (a>0) {
         c = a + b;
         a--;
@@ -84,6 +83,7 @@ int main() {
     if(c>10) {
         c = 10;
     }
+}
 }
 '''
     compiler.compile()

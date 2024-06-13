@@ -12,7 +12,10 @@ class Parser:
             self.function_def()
 
     def cur_val(self):
-        return getattr(self.compiler, self.cur[0])[self.cur[1]]
+        if self.cur[0] == 'END':
+            return None
+        else:
+            return getattr(self.compiler, self.cur[0])[self.cur[1]]
     
     def is_delimiter(self):
         return self.cur_val() in [';', ',', '(', ')', '{', '}']
