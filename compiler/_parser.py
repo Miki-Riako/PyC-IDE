@@ -38,7 +38,7 @@ class Parser:
             self.cur = None
     
     def get_val(self, token):
-        return getattr(self.compiler, token[0])[token[1]]
+        return getattr(self.compiler, token[0])[self.cur[1]]
     
     def peek_next(self):
         if self.index + 1 < len(self.compiler.tokens):
@@ -177,7 +177,7 @@ class Parser:
             self.expr_statement()
         elif self.cur_val() == 'return':
             self.return_statement()
-        elif self.cur_val() in ['if', 'while']:
+        elif self.cur_val() in ['if', 'while', 'do']:
             self.control_statement()
         elif self.cur_val() == '{':
             self.match_char('{')
@@ -207,6 +207,8 @@ class Parser:
             self.if_statement()
         elif self.cur_val() == 'while':
             self.while_statement()
+        elif self.cur_val() == 'do':
+            self.do_while_statement()
         else:
             self.compiler.error = 'Unknown control statement!'
             raise SyntaxError(self.compiler.error)
@@ -250,6 +252,9 @@ class Parser:
             self.logical_expr()
 
     def logical_expr(self):
+        if self.cur_val() == ')':
+            self.compiler.error = 'Missing the condition.'
+            raise SyntaxError(self.compiler.error)
         left = self.relational_expr()
         while self.cur[0] == 'punctuation' and self.cur_val() in ['!', '||', '&&']:
             operator = self.cur_val()
@@ -327,6 +332,20 @@ class Parser:
         end_label = self.new_label()
         self.compiler.quadruples.append((end_label, None, None, None, None))
         self.compiler.quadruples[jump_location] = (start_label, 'jf', condition, None, end_label)
+
+    def do_while_statement(self):
+        self.match_char('do')
+        begin_label = self.new_label()
+        self.compiler.quadruples.append((begin_label, None, None, None, None))
+        self.match_char('{')
+        self.code_lines()
+        self.match_char('}')
+        self.match_char('while')
+        self.match_char('(')
+        condition = self.logical_expr()
+        self.match_char(')')
+        self.match_char(';')
+        self.compiler.quadruples.append((self.new_label(), 'jf', condition, None, begin_label))
 
     def if_statement(self):
         self.match_word('keywords')

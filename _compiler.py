@@ -67,6 +67,7 @@ int main() {
     } else {
         a = 1;
     }
+    do {} while(1);
     return 0;
 }
 
