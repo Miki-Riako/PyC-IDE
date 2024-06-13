@@ -8,7 +8,7 @@ class Parser:
         self.label_counter = 0
 
     def run(self):
-        while (self.cur and self.cur[0] != 'END'):
+        while self.cur and self.cur[0] != 'END':
             self.function_def()
 
     def cur_val(self):
@@ -23,7 +23,10 @@ class Parser:
         self.match_char('(')
         self.parameter_list()
         self.match_char(')')
-        self.compound_statement()
+        self.match_char('{')
+        self.declaration_list()
+        self.statement_list()
+        self.match_char('}')
 
     def next(self):
         self.index += 1
@@ -35,12 +38,12 @@ class Parser:
     def match_word(self, type):
         if self.cur[0] == 'END':
             if self.bracket_stack:
-                self.compiler.error = 'Bracket no matched!'
+                self.compiler.error = 'Bracket not matched!'
                 raise SyntaxError(self.compiler.error)
             return
         
         if self.cur[0] != type:
-            self.compiler.error = 'Expecting: ' + type + ', But get ' + self.cur_val()
+            self.compiler.error = 'Expecting: ' + type + ', But got ' + self.cur_val()
             raise SyntaxError(self.compiler.error)
         
         if self.cur_val() in ['(', '{']:
@@ -49,7 +52,7 @@ class Parser:
             if not self.bracket_stack or \
             (self.cur_val() == ')' and self.bracket_stack[-1] != '(') or \
             (self.cur_val() == '}' and self.bracket_stack[-1] != '{'):
-                self.compiler.error = 'Bracket no matched!'
+                self.compiler.error = 'Bracket not matched!'
                 raise SyntaxError(self.compiler.error)
             self.bracket_stack.pop()
         
@@ -58,12 +61,12 @@ class Parser:
     def match_char(self, char):
         if self.cur[0] == 'END':
             if self.bracket_stack:
-                self.compiler.error = 'Bracket no matched!'
+                self.compiler.error = 'Bracket not matched!'
                 raise SyntaxError(self.compiler.error)
             return
         
         if self.cur_val() != char:
-            self.compiler.error = 'Expecting: ' + char + ', But get ' + self.cur_val()
+            self.compiler.error = 'Expecting: ' + char + ', But got ' + self.cur_val()
             raise SyntaxError(self.compiler.error)
         
         if self.cur_val() in ['(', '{']:
@@ -72,7 +75,7 @@ class Parser:
             if not self.bracket_stack or \
             (self.cur_val() == ')' and self.bracket_stack[-1] != '(') or \
             (self.cur_val() == '}' and self.bracket_stack[-1] != '{'):
-                self.compiler.error = 'Bracket no matched!'
+                self.compiler.error = 'Bracket not matched!'
                 raise SyntaxError(self.compiler.error)
             self.bracket_stack.pop()
         
@@ -81,24 +84,24 @@ class Parser:
     def match_constants(self):
         if self.cur[0] == 'END':
             if self.bracket_stack:
-                self.compiler.error = 'Bracket no matched!'
+                self.compiler.error = 'Bracket not matched!'
                 raise SyntaxError(self.compiler.error)
             return
         
         if self.cur[0] not in ['constants_int', 'constants_float', 'constants_char', 'constants_string']:
-            self.compiler.error = 'Expecting: constants, But get ' + self.cur_val()
+            self.compiler.error = 'Expecting: constants, But got ' + self.cur_val()
             raise SyntaxError(self.compiler.error)
         self.next()
 
     def match_delimiter(self):
         if self.cur[0] == 'END':
             if self.bracket_stack:
-                self.compiler.error = 'Bracket no matched!'
+                self.compiler.error = 'Bracket not matched!'
                 raise SyntaxError(self.compiler.error)
             return
         
         if not self.is_delimiter():
-            self.compiler.error = 'Expecting: delimiter, But get ' + self.cur_val()
+            self.compiler.error = 'Expecting: delimiter, But got ' + self.cur_val()
             raise SyntaxError(self.compiler.error)
         if self.cur_val() in ['(', '{']:
             self.bracket_stack.append(self.cur_val())
@@ -106,7 +109,7 @@ class Parser:
             if not self.bracket_stack or \
             (self.cur_val() == ')' and self.bracket_stack[-1] != '(') or \
             (self.cur_val() == '}' and self.bracket_stack[-1] != '{'):
-                self.compiler.error = 'Bracket no matched!'
+                self.compiler.error = 'Bracket not matched!'
                 raise SyntaxError(self.compiler.error)
             self.bracket_stack.pop()
         
@@ -130,14 +133,8 @@ class Parser:
             self.match_word('keywords')
             return type_name
         else:
-            self.compiler.error = 'Expecting keyword, But get ' + self.cur_val()
+            self.compiler.error = 'Expecting keyword, But got ' + self.cur_val()
             raise SyntaxError(self.compiler.error)
-
-    def compound_statement(self):
-        self.match_char('{')
-        self.declaration_list()
-        self.statement_list()
-        self.match_char('}')
 
     def declaration_list(self):
         while self.cur[0] == 'keywords':
@@ -148,7 +145,7 @@ class Parser:
         identifier = self.cur_val()
         self.match_word('identifiers')
         self.match_char(';')
-        self.compiler.symbol_table.add(identifier, {'type':var_type, 'scope':'local'})
+        self.compiler.symbol_table.add(identifier, {'type': var_type, 'scope': 'local'})
 
     def statement_list(self):
         while self.cur and (self.cur[0] in ['identifiers', 'keywords', 'punctuation']):
@@ -190,7 +187,7 @@ class Parser:
         return f'{self.label_counter}'
 
     def get_label(self):
-        return  f'{self.label_counter}'
+        return f'{self.label_counter}'
 
     def assignment_expr(self):
         if self.cur[0] == 'identifiers':

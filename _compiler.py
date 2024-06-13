@@ -49,7 +49,7 @@ class Compiler:
 
 if __name__ == '__main__':
     compiler = Compiler()
-    compiler.code = input()
+    # compiler.code = input()
     if compiler.code == '':
 #         compiler.code = '''
 
