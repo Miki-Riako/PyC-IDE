@@ -32,8 +32,8 @@ class IDE(FluentWindow):
 
         self.homeInterface       = Home("Home Interface", self)
         self.controllerInterface = Controller('Controller Interface', self)
-        self.workspaceInterface  = Workspace('Workspace Interface', self.controllerInterface, self)
         self.helperInterface     = Helper('Helper Interface', self)
+        self.workspaceInterface  = Workspace('Workspace Interface', self.controllerInterface, self.helperInterface, self)
         self.aboutInterface      = About('About Interface', self)
         self.settingInterface    = Setting('Setting Interface', self)
 

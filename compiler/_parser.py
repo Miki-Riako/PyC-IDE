@@ -38,7 +38,7 @@ class Parser:
             self.cur = None
     
     def get_val(self, token):
-        return getattr(self.compiler, token[0])[self.cur[1]]
+        return getattr(self.compiler, token[0])[token[1]]
     
     def peek_next(self):
         if self.index + 1 < len(self.compiler.tokens):
@@ -166,6 +166,10 @@ class Parser:
                 raise SyntaxError(self.compiler.error)
             self.compiler.symbol_table.add(identifier, {'type': var_type, 'scope': 'local'})
 
+            if self.cur_val() == '=':
+                self.match_char('=')
+                init_value = self.add_expr()
+                self.compiler.quadruples.append((self.new_label(), '=', init_value, None, identifier))
             if self.cur_val() == ';':
                 self.match_char(';')
                 break
@@ -190,16 +194,23 @@ class Parser:
             self.match_delimiter()
 
     def expr_statement(self):
-        self.expr()
-        if not self.is_delimiter() or self.cur_val() != ';':
+        self.assignment_expr()
+        if self.cur_val() != ';':
             self.compiler.error = 'Missing ";"!'
             raise SyntaxError(self.compiler.error)
-        self.match_delimiter()
+        self.match_char(';')
 
     def return_statement(self):
-        self.match_word('keywords')
+        self.match_char('return')
         if self.cur[0] in ['identifiers', 'constants_int', 'constants_float', 'constants_char', 'constants_string']:
-            return_expr = self.expr()
+            return_expr = self.cur_val()
+            if self.get_val(self.peek_next()) != ';':
+                self.assignment_expr()
+            else:
+                if self.cur[0] == 'identifiers':
+                    self.match_word('identifiers')
+                else:
+                    self.match_constants()
         else:
             return_expr = None
         self.compiler.quadruples.append((self.new_label(), 'return', return_expr, None, None))
@@ -217,9 +228,6 @@ class Parser:
         else:
             self.compiler.error = 'Unknown control statement!'
             raise SyntaxError(self.compiler.error)
-
-    def expr(self):
-        return self.assignment_expr()
 
     def new_label(self):
         self.label_counter += 1
@@ -424,7 +432,7 @@ class Parser:
     def factor(self):
         if self.cur[0] == 'punctuation' and self.cur_val() == '(':
             self.match_delimiter()
-            expr_quad = self.expr()
+            expr_quad = self.assignment_expr()
             self.match_delimiter()
             return expr_quad
         elif self.cur[0] == 'identifiers':

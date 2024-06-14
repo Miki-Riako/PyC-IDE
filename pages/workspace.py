@@ -14,7 +14,7 @@ from qfluentwidgets import (
     )
 from qfluentwidgets import FluentIcon as FIF
 
-DEBUG_MODE = True
+DEBUG_MODE = False
 
 class KeywordHighlighter(QSyntaxHighlighter):
     def __init__(self, parent=None):
@@ -74,9 +74,10 @@ class KeywordHighlighter(QSyntaxHighlighter):
 
 
 class Workspace(QWidget):
-    def __init__(self, text: str, controller, parent=None):
+    def __init__(self, text: str, controller, helper, parent=None):
         super().__init__(parent=parent)
         self.controller = controller
+        self.helper = helper
 
         self.vBoxLayout = QVBoxLayout(self)
         self.tabBoxLayout = QHBoxLayout(self)
@@ -153,6 +154,7 @@ class Workspace(QWidget):
             for var, value in compiler.variables.items():
                 variables_show.append((var, value))
             self.controller.resetVariables(variables_show)
+            self.helper.set_code(compiler.asm_code)
             InfoBar.success(
                 title='Success!',
                 content="Compilation Done.\n\nWith respect, let's advance towards a new stage of the spin.",

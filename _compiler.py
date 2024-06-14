@@ -1,4 +1,4 @@
-from compiler import Lexer, Parser, SymbolTable, Interpreter, Optimizer
+from compiler import Lexer, Parser, SymbolTable, Interpreter, Optimizer, Generator
 
 class Compiler:
     def __init__(self):
@@ -22,6 +22,7 @@ class Compiler:
         self.quadruples       = []
         self.variables = {}
         self.code  = ''
+        self.asm_code = ''
         self.error = ''
     
     def compile(self):
@@ -32,7 +33,9 @@ class Compiler:
         interpret = Interpreter(self)
         interpret.execute()
         # optimizer = Optimizer(self)
-        # optimizer.optimize(self.quadruples)
+        # optimizer.optimize()
+        generator = Generator(self)
+        generator.generate()
     
     def show(self, target):
         if target == 'tokens':
@@ -59,19 +62,36 @@ if __name__ == '__main__':
     # compiler.code = input()
     if compiler.code == '':
         compiler.code = '''
+int swap(int b, int c) {
+    int y = 1;
+    return y;
+}
+
 int main() {
-    int a, b, c;
-    a = 1;
-    b = 1;
-    while (a > 0) {
-        c = a + b;
-        a--;
-    }
-    if (c > 0) {
-        c = -2;
+    int num;
+    int a;
+    num = 2;
+    if (num > 0) {
+        a = num;
+    } else {
+        a = 1;
+        y = swap(a, num);
     }
 }
-''' # default example code
+'''
+# int main() {
+#     int a, b, c;
+#     a = 1;
+#     b = 1;
+#     while (a > 0) {
+#         c = a + b;
+#         a--;
+#     }
+#     if (c > 0) {
+#         c = -2;
+#     }
+# }
+# ''' # default example code
     compiler.compile()
     compiler.show('tokens')
     compiler.show('quadruples')
