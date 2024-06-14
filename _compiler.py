@@ -10,7 +10,7 @@ class Compiler:
         self.punctuation = [
             '-', '/', '(', ')', '==', '<=', '<', '+',
             '*', '>', '=', ',', ';',  '++', '{', '}',
-            '--'
+            '--', '.'
         ]
         self.identifiers      = []
         self.constants_int    = []
@@ -62,33 +62,14 @@ if __name__ == '__main__':
     # compiler.code = input()
     if compiler.code == '':
         compiler.code = '''
+struct A {int n1; int n2;};
 int main() {
-    int a, b, c;
-    a = 1;
-    b = 1;
-    while (a > 0) {
-        c = a + b;
-        a--;
-        
-    }
-    if (c > 0) {
-        c = -2;
-    }
+    struct A a;
+    a.n1 = 1;
+    a.n2 = 2;
+    return 0;
 }
 '''
-# int main() {
-#     int a, b, c;
-#     a = 1;
-#     b = 1;
-#     while (a > 0) {
-#         c = a + b;
-#         a--;
-#     }
-#     if (c > 0) {
-#         c = -2;
-#     }
-# }
-# ''' # default example code
     compiler.compile()
     compiler.show('tokens')
     compiler.show('quadruples')

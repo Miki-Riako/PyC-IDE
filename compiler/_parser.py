@@ -153,7 +153,7 @@ class Parser:
         return {'type': param_type, 'name': param_name}
 
     def type(self):
-        if self.cur_val() in ['int', 'float', 'char', 'void']:
+        if self.cur_val() in ['int', 'float', 'char', 'void', 'struct']:
             type_name = self.cur_val()
             self.match_word('keywords')
             return type_name
@@ -165,13 +165,35 @@ class Parser:
         while True:
             if self.cur_val() == '}':
                 break
-            elif self.cur_val() in ['int', 'float', 'char', 'void']:
+            elif self.cur_val() in ['int', 'float', 'char', 'void', 'struct']:
                 self.declaration()
             else:
                 self.statement()
 
     def declaration(self):
         var_type = self.type()
+
+        if var_type == 'struct':
+            struct_name = self.cur_val()
+            self.match_word('identifiers')
+            self.match_char('{')
+            struct_members = []
+            while self.cur_val() != '}':
+                member_type = self.type()
+                member_name = self.cur_val()
+                self.match_word('identifiers')
+                struct_members.append({'type': member_type, 'name': member_name})
+                if self.cur_val() == ';':
+                    self.match_char(';')
+                else:
+                    self.compiler.error = 'Expecting ";" in struct declaration, But got ' + self.cur_val()
+                    raise SyntaxError(self.compiler.error)
+            self.match_char('}')
+            self.compiler.symbol_table.add(struct_name, {'type': 'struct', 'members': struct_members})
+            if self.cur_val() == ';':
+                self.match_char(';')
+            return
+
         while True:
             identifier = self.cur_val()
             self.match_word('identifiers')

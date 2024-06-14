@@ -4,7 +4,7 @@ class Lexer:
     def __init__(self, compiler):
         self.compiler = compiler
         self.re_keywords    = re.compile(r'\b(' + '|'.join(self.compiler.keywords) + r')\b')
-        self.re_punctuation = re.compile(r'==|<=|>=|\+\+|--|[-/()<+*>=,;{}]')
+        self.re_punctuation = re.compile(r'==|<=|>=|\+\+|--|[-/()<+*>=,;{}\.]')
         self.re_identifier  = re.compile(r'\b[a-zA-Z_][a-zA-Z0-9_]*\b')
         self.re_float       = re.compile(r'-?\b\d+(\.\d+([eE][+-]?\d+)?|[eE][+-]?\d+)\b')
         self.re_decimal     = re.compile(r'-?\b\d+\b')
