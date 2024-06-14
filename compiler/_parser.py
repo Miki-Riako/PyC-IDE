@@ -417,7 +417,13 @@ class Parser:
         condition = self.logical_expr()
         self.match_char(')')
         self.match_char(';')
-        self.compiler.quadruples.append((self.new_label(), 'jf', condition, None, begin_label))
+        mark = self.new_label()
+        self.compiler.quadruples.append((mark, 'jf', condition, None, None))
+        jf_location = len(self.compiler.quadruples) - 1
+        self.compiler.quadruples.append((self.new_label(), 'jmp', None, None, begin_label))
+        void_label = self.new_label()
+        self.compiler.quadruples.append((void_label, None, None, None, None))
+        self.compiler.quadruples[jf_location] = (mark, 'jf', condition, None, void_label)
 
     def if_statement(self):
         self.match_word('keywords')

@@ -157,7 +157,8 @@ class Workspace(QWidget):
             self.helper.set_code(compiler.asm_code)
             InfoBar.success(
                 title='Success!',
-                content="Compilation Done.\n\nWith respect, let's advance towards a new stage of the spin.",
+                # content="Compilation Done.\n\nWith respect, let's advance towards a new stage of the spin.",
+                content="Compilation Done.",
                 orient=Qt.Horizontal,
                 isClosable=True,
                 position=InfoBarPosition.TOP,
@@ -173,7 +174,8 @@ class Workspace(QWidget):
         except Exception as e:
             InfoBar.error(
                 title='Error',
-                content=f"Compilation failed:\n{str(e)}\n\n迂回路を行けば最短ルート。",
+                # content=f"Compilation failed:\n{str(e)}\n\n迂回路を行けば最短ルート。",
+                content=f"Compilation failed:\n{str(e)}",
                 orient=Qt.Horizontal,
                 isClosable=True,
                 position=InfoBarPosition.BOTTOM_RIGHT,
