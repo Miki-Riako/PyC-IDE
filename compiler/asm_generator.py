@@ -24,9 +24,9 @@ class Generator:
             elif op == 'jmp':
                 self.asm_code.append(f"    JMP {result}")
             elif op == '++':
-                self.asm_code.append(f"    INC {result}")
+                self.asm_code.append(f"    INC {arg1}")
             elif op == '--':
-                self.asm_code.append(f"    DEC {result}")
+                self.asm_code.append(f"    DEC {arg1}")
             elif op == 'param':
                 self.generate_param(arg1)
             elif op == 'call':
@@ -37,23 +37,17 @@ class Generator:
         self.compiler.asm_code = "\n".join(self.asm_code)
 
     def generate_arithmetic(self, op, arg1, arg2, result):
+        self.asm_code.append(f"    MOV AX, {arg1}")
         if op == '+':
-            self.asm_code.append(f"    MOV AX, {arg1}")
             self.asm_code.append(f"    ADD AX, {arg2}")
-            self.asm_code.append(f"    MOV {result}, AX")
         elif op == '-':
-            self.asm_code.append(f"    MOV AX, {arg1}")
             self.asm_code.append(f"    SUB AX, {arg2}")
-            self.asm_code.append(f"    MOV {result}, AX")
         elif op == '*':
-            self.asm_code.append(f"    MOV AX, {arg1}")
-            self.asm_code.append(f"    MUL {arg2}")
-            self.asm_code.append(f"    MOV {result}, AX")
+            self.asm_code.append(f"    MUL {arg2}")  # MUL in x86 implicitly uses AX
         elif op == '/':
-            self.asm_code.append(f"    MOV AX, {arg1}")
-            self.asm_code.append(f"    MOV DX, 0")
-            self.asm_code.append(f"    DIV {arg2}")
-            self.asm_code.append(f"    MOV {result}, AX")
+            self.asm_code.append(f"    MOV DX, 0")  # Clear DX for DIV operation
+            self.asm_code.append(f"    DIV {arg2}")  # DIV in x86 implicitly uses AX and DX
+        self.asm_code.append(f"    MOV {result}, AX")
 
     def generate_comparison(self, op, arg1, arg2, result):
         self.asm_code.append(f"    MOV AX, {arg1}")
