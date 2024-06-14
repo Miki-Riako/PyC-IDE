@@ -203,32 +203,12 @@ class Parser:
             self.return_statement()
         elif self.cur_val() in ['if', 'while', 'do', 'for']:
             self.control_statement()
-        elif self.cur_val() == 'break':
-            self.break_statement()
-        elif self.cur_val() == 'continue':
-            self.continue_statement()
         elif self.cur_val() == '{':
             self.match_char('{')
             self.code_lines()
             self.match_char('}')
         else:
             self.match_delimiter()
-
-    def break_statement(self):
-        self.match_word('keywords')
-        if not self.break_stack:
-            self.compiler.error = 'break statement not within loop'
-            raise SyntaxError(self.compiler.error)
-        self.compiler.quadruples.append((self.new_label(), 'jmp', None, None, self.break_stack[-1]))
-        self.match_char(';')
-
-    def continue_statement(self):
-        self.match_word('keywords')
-        if not self.continue_stack:
-            self.compiler.error = 'continue statement not within loop'
-            raise SyntaxError(self.compiler.error)
-        self.compiler.quadruples.append((self.new_label(), 'jmp', None, None, self.continue_stack[-1]))
-        self.match_char(';')
 
     def function_call(self):
         function_name = self.cur_val()
@@ -417,14 +397,11 @@ class Parser:
         start_label = self.new_label()
         self.compiler.quadruples.append((start_label, 'jf', condition, None, None))
         jmp_location = len(self.compiler.quadruples) - 1
-        self.continue_stack.append(begin_label)
-        self.break_stack.append(self.get_label())
         self.match_char('{')
         self.code_lines()
         self.match_char('}')
-        self.continue_stack.pop()
         self.compiler.quadruples.append((self.new_label(), 'jmp', None, None, begin_label))
-        end_label = self.break_stack.pop()
+        end_label = self.new_label()
         self.compiler.quadruples.append((end_label, None, None, None, None))
         self.compiler.quadruples[jmp_location] = (start_label, 'jf', condition, None, end_label)
 
@@ -432,20 +409,15 @@ class Parser:
         self.match_char('do')
         begin_label = self.new_label()
         self.compiler.quadruples.append((begin_label, None, None, None, None))
-        self.continue_stack.append(begin_label)
-        self.break_stack.append(self.get_label())
         self.match_char('{')
         self.code_lines()
         self.match_char('}')
-        self.continue_stack.pop()
         self.match_char('while')
         self.match_char('(')
         condition = self.logical_expr()
         self.match_char(')')
         self.match_char(';')
         self.compiler.quadruples.append((self.new_label(), 'jf', condition, None, begin_label))
-        end_label = self.break_stack.pop()
-        self.compiler.quadruples.append((end_label, None, None, None, None))
 
     def if_statement(self):
         self.match_word('keywords')
@@ -483,25 +455,28 @@ class Parser:
         self.match_char('(')
         self.assignment_expr()
         self.match_char(';')
+        
         condition = self.logical_expr()
         self.match_char(';')
+        
         increment = self.assignment_expr(False)
         self.match_char(')')
+        
         begin_label = self.get_label()
         start_label = self.new_label()
         self.compiler.quadruples.append((start_label, 'jf', condition, None, None))
         jmp_location = len(self.compiler.quadruples) - 1
-        self.continue_stack.append(self.new_label())
-        self.break_stack.append(self.get_label())
+        
         self.match_char('{')
         self.code_lines()
         self.match_char('}')
+        
         self.compiler.quadruples.append((self.new_label(), increment[1], increment[2], increment[3], increment[4]))
         self.compiler.quadruples.append((self.new_label(), 'jmp', None, None, begin_label))
-        end_label = self.break_stack.pop()
+        
+        end_label = self.new_label()
         self.compiler.quadruples.append((end_label, None, None, None, None))
         self.compiler.quadruples[jmp_location] = (start_label, 'jf', condition, None, end_label)
-        self.continue_stack.pop()
 
     def factor(self):
         if self.cur[0] == 'punctuation' and self.cur_val() == '(':
