@@ -21,11 +21,20 @@ class Parser:
         return self.cur_val() in [';', ',', '(', ')', '{', '}']
     
     def function_def(self):
-        self.type()
+        return_type = self.type()
+        function_name = self.cur_val()
         self.match_word('identifiers')
         self.match_char('(')
-        self.parameter_list()
+        param_list = self.parameter_list()
         self.match_char(')')
+
+        function_info = {
+            'type': return_type,
+            'params': param_list,
+            'start_quadruple': len(self.compiler.quadruples)
+        }
+        self.compiler.symbol_table.add(function_name, function_info)
+
         self.match_char('{')
         self.code_lines()
         self.match_char('}')
@@ -127,16 +136,19 @@ class Parser:
         self.next()
 
     def parameter_list(self):
+        param_list = []
         if self.cur and self.cur[0] == 'keywords':
-            self.parameter_dec()
-
+            param_list.append(self.parameter_dec())
             while self.cur and self.is_delimiter() and self.cur_val() == ',':
                 self.match_delimiter()
-                self.parameter_dec()
+                param_list.append(self.parameter_dec())
+        return param_list
 
     def parameter_dec(self):
-        self.type()
+        param_type = self.type()
+        param_name = self.cur_val()
         self.match_word('identifiers')
+        return {'type': param_type, 'name': param_name}
 
     def type(self):
         if self.cur_val() in ['int', 'float', 'char', 'void']:
@@ -181,7 +193,10 @@ class Parser:
 
     def statement(self):
         if self.cur[0] == 'identifiers':
-            self.expr_statement()
+            if self.peek_next() and self.get_val(self.peek_next()) == '(':
+                self.function_call()
+            else:
+                self.expr_statement()
         elif self.cur_val() == 'return':
             self.return_statement()
         elif self.cur_val() in ['if', 'while', 'do', 'for']:
@@ -192,6 +207,39 @@ class Parser:
             self.match_char('}')
         else:
             self.match_delimiter()
+
+    def function_call(self):
+        function_name = self.cur_val()
+        function_info = self.compiler.symbol_table.lookup(function_name)
+        if not function_info:
+            self.compiler.error = f'Undefined function: {function_name}'
+            raise SyntaxError(self.compiler.error)
+        
+        self.match_word('identifiers')
+        self.match_char('(')
+        arguments = self.argument_list()
+        self.match_char(')')
+        
+        if len(arguments) != len(function_info['params']):
+            self.compiler.error = f'Argument count mismatch for function: {function_name}'
+            raise SyntaxError(self.compiler.error)
+        
+        for i, arg in enumerate(arguments):
+            param = function_info['params'][i]
+            self.compiler.quadruples.append((self.new_label(), 'param', arg, None, param['name']))
+        
+        return_quad = self.new_temp()
+        self.compiler.quadruples.append((self.new_label(), 'call', function_name, None, return_quad))
+        return return_quad
+
+    def argument_list(self):
+        args = []
+        if self.cur[0] in ['identifiers', 'constants_int', 'constants_float', 'constants_char', 'constants_string']:
+            args.append(self.add_expr())
+            while self.cur and self.is_delimiter() and self.cur_val() == ',':
+                self.match_delimiter()
+                args.append(self.add_expr())
+        return args
 
     def expr_statement(self):
         self.assignment_expr()
@@ -305,11 +353,12 @@ class Parser:
         return left
 
     def add_expr(self):
+        if self.cur[0] == 'identifiers' and self.peek_next() and self.get_val(self.peek_next()) == '(':
+            return self.function_call()
         left = self.mul_expression()
         while self.cur[0] == 'punctuation' and self.cur_val() in ['+', '-', '++', '--']:
             operator = self.cur_val()
             self.match_word('punctuation')
-            
             if operator in ['++', '--']:
                 right = '1'
             else:
@@ -317,12 +366,10 @@ class Parser:
                     self.compiler.error = 'Missing the number after add or sub!'
                     raise SyntaxError(self.compiler.error)
                 right = self.mul_expression()
-            
             temp_var = self.new_temp()
             quad = (self.new_label(), operator, left, right, temp_var)
             self.compiler.quadruples.append(quad)
             left = temp_var
-        
         return left
 
     def mul_expression(self):

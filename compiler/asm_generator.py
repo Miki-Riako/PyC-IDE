@@ -3,14 +3,15 @@ class Generator:
         self.compiler = compiler
         self.asm_code = []
         self.label_counter = 0
-    
+        self.temp_count = 0
+
     def generate(self):
         for quad in self.compiler.quadruples:
             label, op, arg1, arg2, result = quad
-            
+
             if label:
                 self.asm_code.append(f"{label}:")
-                
+
             if op == '=':
                 self.asm_code.append(f"    MOV {result}, {arg1}")
             elif op in ['+', '-', '*', '/']:
@@ -26,6 +27,12 @@ class Generator:
                 self.asm_code.append(f"    INC {result}")
             elif op == '--':
                 self.asm_code.append(f"    DEC {result}")
+            elif op == 'param':
+                self.generate_param(arg1)
+            elif op == 'call':
+                self.generate_call(arg1, result)
+            elif op == 'return':
+                self.generate_return(arg1)
 
         self.compiler.asm_code = "\n".join(self.asm_code)
 
@@ -63,3 +70,19 @@ class Generator:
             self.asm_code.append(f"    JLE {result}")
         elif op == '!=':
             self.asm_code.append(f"    JNE {result}")
+
+    def generate_param(self, arg):
+        self.asm_code.append(f"    PUSH {arg}")
+
+    def generate_call(self, function_name, result):
+        self.asm_code.append(f"    CALL {function_name}")
+        self.asm_code.append(f"    MOV {result}, AX")
+
+    def generate_return(self, arg):
+        if arg:
+            self.asm_code.append(f"    MOV AX, {arg}")
+        self.asm_code.append(f"    RET")
+
+    def new_temp(self):
+        self.temp_count += 1
+        return f'temp{self.temp_count}'

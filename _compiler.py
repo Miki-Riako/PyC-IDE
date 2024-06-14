@@ -62,7 +62,7 @@ if __name__ == '__main__':
     # compiler.code = input()
     if compiler.code == '':
         compiler.code = '''
-int swap(int b, int c) {
+int make(int b, int c) {
     int y = 1;
     return y;
 }
@@ -75,7 +75,7 @@ int main() {
         a = num;
     } else {
         a = 1;
-        y = swap(a, num);
+        y = make(a, num);
     }
 }
 '''
@@ -96,7 +96,7 @@ int main() {
     compiler.show('tokens')
     compiler.show('quadruples')
     compiler.show('variable')
-    print(compiler.tokens)
-    print(compiler.quadruples)
-    print(compiler.variables)
+    # print(compiler.tokens)
+    # print(compiler.quadruples)
+    # print(compiler.variables)
     print('No errors found.')

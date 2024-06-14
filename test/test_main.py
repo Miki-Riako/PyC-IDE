@@ -247,3 +247,30 @@ int main() {
     # assert str(compiler.variables) == "{'num': '2', 't0': True, 'a': '2'}"
 
 
+def test_c12():
+    compiler = Compiler()
+    compiler.code = '''
+int make(int b, int c) {
+    int y = 1;
+    return y;
+}
+
+int main() {
+    int num;
+    int a;
+    num = 2;
+    if (num > 0) {
+        a = num;
+    } else {
+        a = 1;
+        y = make(a, num);
+    }
+}
+    '''
+    compiler.compile()
+
+    assert compiler.error == ''
+    # assert str(compiler.tokens) == "[('keywords', 0), ('identifiers', 0), ('punctuation', 2), ('punctuation', 3), ('punctuation', 14), ('keywords', 0), ('identifiers', 1), ('punctuation', 12), ('keywords', 0), ('identifiers', 2), ('punctuation', 12), ('identifiers', 1), ('punctuation', 10), ('constants_int', 0), ('punctuation', 12), ('keywords', 11), ('punctuation', 2), ('identifiers', 1), ('punctuation', 9), ('constants_int', 1), ('punctuation', 3), ('punctuation', 14), ('identifiers', 2), ('punctuation', 10), ('identifiers', 1), ('punctuation', 12), ('punctuation', 15), ('keywords', 13), ('punctuation', 14), ('identifiers', 2), ('punctuation', 10), ('constants_int', 2), ('punctuation', 12), ('punctuation', 15), ('punctuation', 15), ('END', -1)]"
+    # assert str(compiler.quadruples) == "[('1', '=', '2', None, 'num'), ('2', '>', 'num', '0', 't0'), ('3', 'jf', 't0', None, '6'), ('4', '=', 'num', None, 'a'), ('5', 'jmp', None, None, '8'), ('6', None, None, None, None), ('7', '=', '1', None, 'a'), ('8', None, None, None, None)]"
+    # assert str(compiler.variables) == "{'num': '2', 't0': True, 'a': '2'}"
+
