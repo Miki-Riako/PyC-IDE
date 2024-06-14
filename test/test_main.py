@@ -77,7 +77,6 @@ int main() {
     while (a > 0) {
         c = a + b;
         a--;
-        break;
     }
     if (c > 0) {
         c = -2;

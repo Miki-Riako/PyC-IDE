@@ -32,8 +32,8 @@ class Compiler:
         parser.run()
         interpret = Interpreter(self)
         interpret.execute()
-        # optimizer = Optimizer(self)
-        # optimizer.optimize()
+        optimizer = Optimizer(self)
+        optimizer.optimize()
         generator = Generator(self)
         generator.generate()
     
